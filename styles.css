@@ -34,6 +34,15 @@ body {
     gap: 16px;
 }
 
+.menu-toggle-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: #f9fafb;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
 .logo {
     width: 40px;
     height: 40px;
@@ -612,19 +621,24 @@ body.manage-mode .edit-btn {
         display: none;
     }
 
-    /* إبقاء القائمة الجانبية ظاهرة في الجوال حتى تعمل الأقسام داخل تطبيق APK */
+    .menu-toggle-btn {
+        display: inline-flex;
+    }
+
+    /* القائمة الجانبية تكون مخفية افتراضيًا وتظهر عند ضغط زر القائمة */
     .sidebar {
-        transform: none;
-        transition: none;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 90;
     }
 
-    .sidebar.active {
-        transform: none;
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
     }
 
-    /* نحافظ على نفس الهامش مثل سطح المكتب حتى لا يغطي المحتوى */
+    /* المحتوى يأخذ العرض الكامل في الجوال */
     .main-content {
-        margin-right: 256px;
+        margin-right: 0;
     }
 
     .stats-grid, .apps-grid {
