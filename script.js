@@ -10,6 +10,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // تفعيل مربع البحث عن تطبيق أو إحصائية
+    const searchInput = document.querySelector('.search-box input');
+
+    function applySearchFilter(query) {
+        const q = query.trim().toLowerCase();
+
+        // تصفية بطاقات التطبيقات (ويب وAPK)
+        const appCards = document.querySelectorAll('.apps-grid .app-card');
+        appCards.forEach(card => {
+            if (!q) {
+                card.style.display = '';
+                return;
+            }
+
+            const titleEl = card.querySelector('.app-info h3');
+            const descEl = card.querySelector('.app-description');
+            const statusEl = card.querySelector('.app-meta .status');
+
+            const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+            const desc = descEl ? descEl.textContent.trim().toLowerCase() : '';
+            const status = statusEl ? statusEl.textContent.trim().toLowerCase() : '';
+
+            const combined = `${title} ${desc} ${status}`;
+            card.style.display = combined.includes(q) ? '' : 'none';
+        });
+
+        // تصفية بطاقات الإحصائيات
+        const statCards = document.querySelectorAll('.stats-grid .stat-card');
+        statCards.forEach(card => {
+            if (!q) {
+                card.style.display = '';
+                return;
+            }
+
+            const titleEl = card.querySelector('.stat-header h3');
+            const valueEl = card.querySelector('.stat-value');
+
+            const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+            const value = valueEl ? valueEl.textContent.trim().toLowerCase() : '';
+
+            const combined = `${title} ${value}`;
+            card.style.display = combined.includes(q) ? '' : 'none';
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            applySearchFilter(this.value);
+        });
+    }
+
     // التعامل مع قائمة التطبيقات المنسدلة
     const appSelectorBtn = document.getElementById('appSelectorBtn');
     const appDropdown = document.getElementById('appDropdown');
@@ -656,11 +707,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // تحديث الإحصائيات بشكل دوري
+    // تحديث الإحصائيات بشكل دوري حتى لو كانت القيم نصوصاً غير رقمية في البداية
     setInterval(function() {
         const statValues = document.querySelectorAll('.stat-value');
         statValues.forEach(value => {
-            const currentValue = parseInt(value.textContent.replace(/,/g, ''));
+            // استخراج الأرقام فقط من النص الحالي (يتجاهل الكلمات مثل "ليس رقم")
+            const digitsOnly = value.textContent.replace(/[^0-9]/g, '');
+            let currentValue = digitsOnly ? parseInt(digitsOnly, 10) : 0;
+
             const newValue = currentValue + Math.floor(Math.random() * 10);
             value.textContent = newValue.toLocaleString('ar-SA');
         });
