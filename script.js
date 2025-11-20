@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // إغلاق القائمة الجانبية عند النقر خارجها في الجوال
         const sidebar = document.querySelector('.sidebar');
         if (sidebar && document.body.classList.contains('sidebar-open')) {
-            if (!sidebar.contains(e.target) && e.target !== menuToggleBtn) {
+            const clickInsideSidebar = sidebar.contains(e.target);
+            const clickOnMenuButton = menuToggleBtn && (e.target === menuToggleBtn || menuToggleBtn.contains(e.target));
+            if (!clickInsideSidebar && !clickOnMenuButton) {
                 document.body.classList.remove('sidebar-open');
             }
         }
