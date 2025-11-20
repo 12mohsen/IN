@@ -174,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const appId = card.dataset.appId;
             if (appId) {
+                // بطاقات مضافة ديناميكياً (ويب أو أندرويد)
                 const isWeb = card.closest('#webAppsGrid') !== null;
                 if (isWeb) {
                     webApps = webApps.filter(app => app.id !== appId);
@@ -181,6 +182,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     apkApps = apkApps.filter(app => app.id !== appId);
                     saveApkApps();
+                }
+            } else {
+                // بطاقة ثابتة من HTML: نحفظ اسمها ورابطها حتى لا تعود بعد التحديث
+                const titleEl = card.querySelector('.app-info h3');
+                const primaryLink = card.querySelector('.app-actions a.btn-primary');
+                const name = titleEl ? titleEl.textContent.trim() : '';
+                const url = primaryLink ? primaryLink.getAttribute('href') : '';
+
+                if (name && url) {
+                    const key = name + '|' + url;
+                    if (!deletedStaticCardKeys.includes(key)) {
+                        deletedStaticCardKeys.push(key);
+                        saveDeletedStaticCards();
+                    }
                 }
             }
 
@@ -356,10 +371,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // مصفوفات للتخزين في localStorage
     let webApps = [];
     let apkApps = [];
+    // قائمة مفاتيح البطاقات الثابتة المحذوفة (اسم + رابط)
+    let deletedStaticCardKeys = [];
 
     // مفاتيح التخزين المحلية
     const WEB_APPS_KEY = 'dashboard_web_apps';
     const APK_APPS_KEY = 'dashboard_apk_apps';
+    const DELETED_STATIC_KEY = 'dashboard_deleted_static_cards';
 
     function saveWebApps() {
         localStorage.setItem(WEB_APPS_KEY, JSON.stringify(webApps));
@@ -367,6 +385,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function saveApkApps() {
         localStorage.setItem(APK_APPS_KEY, JSON.stringify(apkApps));
+    }
+
+    function saveDeletedStaticCards() {
+        localStorage.setItem(DELETED_STATIC_KEY, JSON.stringify(deletedStaticCardKeys));
     }
 
     function createWebCardFromData(app) {
@@ -471,11 +493,32 @@ document.addEventListener('DOMContentLoaded', function() {
         apkApps = [];
     }
 
+    try {
+        const storedDeleted = localStorage.getItem(DELETED_STATIC_KEY);
+        if (storedDeleted) {
+            deletedStaticCardKeys = JSON.parse(storedDeleted);
+        }
+    } catch (e) {
+        deletedStaticCardKeys = [];
+    }
+
     // تطبيق تأثير التحويم ومنطق الحذف/التعديل على البطاقات الثابتة الموجودة في HTML فقط
     const appCards = document.querySelectorAll('.app-card');
     appCards.forEach(card => {
         // لا نعيد ربط البطاقات التي تم إنشاؤها من localStorage (لديها appId) لأننا ربطناها بالفعل
         if (card.dataset.appId) return;
+
+        // إذا كانت البطاقة من البطاقات الثابتة المحذوفة سابقاً، لا نظهرها
+        const titleEl = card.querySelector('.app-info h3');
+        const primaryLink = card.querySelector('.app-actions a.btn-primary');
+        const name = titleEl ? titleEl.textContent.trim() : '';
+        const url = primaryLink ? primaryLink.getAttribute('href') : '';
+        const key = name && url ? (name + '|' + url) : null;
+        if (key && deletedStaticCardKeys.includes(key)) {
+            card.remove();
+            return;
+        }
+
         attachCardHover(card);
         attachDeleteHandler(card);
         attachEditHandler(card);
