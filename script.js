@@ -396,17 +396,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.classList.remove('card-disabled');
                 }
 
-                // إذا كانت البطاقة من التطبيقات المحفوظة، نحدّث بياناتها في webApps
+                // إذا كانت البطاقة من التطبيقات المحفوظة، نحدّث بياناتها في webApps أو apkApps
                 const appId = card.dataset.appId;
                 if (appId) {
-                    const index = webApps.findIndex(app => app.id === appId);
+                    const isWeb = card.closest('#webAppsGrid') !== null;
+                    const list = isWeb ? webApps : apkApps;
+                    const index = list.findIndex(app => app.id === appId);
                     if (index !== -1) {
-                        webApps[index].name = newName;
-                        webApps[index].url = newUrl;
-                        webApps[index].desc = newDesc;
-                        webApps[index].statusText = statusText;
-                        webApps[index].statusClass = statusClass;
-                        saveWebApps();
+                        list[index].name = newName;
+                        list[index].url = newUrl;
+                        list[index].desc = newDesc;
+                        list[index].statusText = statusText;
+                        list[index].statusClass = statusClass;
+                        if (isWeb) {
+                            saveWebApps();
+                        } else {
+                            saveApkApps();
+                        }
                     }
                 }
 
@@ -507,6 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="app-actions">
                     <a href="${app.url}" class="btn btn-primary" target="_blank">تحميل APK</a>
                     <a href="${app.url}" class="btn btn-secondary" target="_blank">فتح الرابط</a>
+                    <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                     <button type="button" class="btn delete-btn">حذف التطبيق</button>
                 </div>
             </div>
@@ -520,6 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
             apkAppsGrid.appendChild(card);
             attachCardHover(card);
             attachDeleteHandler(card);
+            attachEditHandler(card);
         }
     }
 
