@@ -1,5 +1,15 @@
 // إضافة التفاعلية للقائمة الجانبية في الأجهزة المحمولة
 document.addEventListener('DOMContentLoaded', function() {
+    // زر قائمة الجوال لفتح/إغلاق القائمة الجانبية
+    const menuToggleBtn = document.getElementById('menuToggleBtn');
+
+    if (menuToggleBtn) {
+        menuToggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            document.body.classList.toggle('sidebar-open');
+        });
+    }
+
     // التعامل مع قائمة التطبيقات المنسدلة
     const appSelectorBtn = document.getElementById('appSelectorBtn');
     const appDropdown = document.getElementById('appDropdown');
@@ -15,6 +25,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (!appDropdown.contains(e.target) && !appSelectorBtn.contains(e.target)) {
             appDropdown.classList.remove('active');
+        }
+
+        // إغلاق القائمة الجانبية عند النقر خارجها في الجوال
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && document.body.classList.contains('sidebar-open')) {
+            if (!sidebar.contains(e.target) && e.target !== menuToggleBtn) {
+                document.body.classList.remove('sidebar-open');
+            }
         }
     });
 
