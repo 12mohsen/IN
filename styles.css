@@ -1,0 +1,631 @@
+/* إعدادات عامة */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+}
+
+body {
+    background-color: #050816;
+    color: #e5e7eb;
+    direction: rtl;
+}
+
+/* الشريط العلوي */
+.header {
+    height: 60px;
+    background-color: #020617;
+    border-bottom: 1px solid #111827;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.header-right, .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f9fafb;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding: 8px 40px 8px 16px;
+    border: 1px solid #1f2937;
+    border-radius: 6px;
+    width: 300px;
+    font-size: 0.875rem;
+}
+
+.search-box i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.notification-btn, .profile-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1a1a1a;
+    padding: 8px;
+}
+
+.badge {
+    background-color: #f85149;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* القائمة الجانبية */
+.container {
+    display: flex;
+    margin-top: 60px;
+}
+
+.sidebar {
+    width: 256px;
+    background-color: #020617;
+    border-left: 1px solid #111827;
+    height: calc(100vh - 60px);
+    position: fixed;
+    padding: 24px 0;
+}
+
+.app-selector {
+    padding: 0 16px;
+    margin-bottom: 24px;
+}
+
+.app-selector button {
+    width: 100%;
+    padding: 8px 16px;
+    background-color: #020617;
+    border: 1px solid #1f2937;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar nav a {
+    padding: 12px 24px;
+    color: #e5e7eb;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar nav a:hover, .sidebar nav a.active {
+    background-color: #111827;
+    color: #38bdf8;
+}
+
+/* قائمة التطبيقات المنسدلة */
+.app-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 16px;
+    left: 16px;
+    background-color: #020617;
+    border: 1px solid #111827;
+    border-radius: 6px;
+    margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 1000;
+}
+
+.app-dropdown.active {
+    display: block;
+}
+
+.app-dropdown-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e1e4e8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-dropdown-header h4 {
+    font-size: 0.875rem;
+    color: #e5e7eb;
+}
+
+.app-count {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.app-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.app-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: #1a1a1a;
+    transition: background-color 0.2s ease;
+}
+
+.app-item:hover {
+    background-color: #111827;
+}
+
+.app-item.active {
+    background-color: #0f172a;
+}
+
+.app-item img {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+}
+
+.app-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.app-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.app-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.app-status.beta {
+    background-color: #8957e5;
+    color: white;
+}
+
+/* المحتوى الرئيسي */
+.main-content {
+    margin-right: 256px;
+    padding: 24px;
+    flex: 1;
+}
+
+.welcome-banner {
+    background: radial-gradient(circle at top, #0ea5e9, #0f172a 55%, #020617 100%);
+    color: #f9fafb;
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.welcome-banner h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+/* عنوان الأقسام داخل المحتوى */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #f9fafb;
+}
+
+/* نموذج إضافة تطبيق جديد */
+.add-app-form {
+    background-color: #020617;
+    border: 1px solid #111827;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: flex-end;
+}
+
+.password-form {
+    display: none;
+    margin-bottom: 16px;
+}
+
+body.manage-mode .password-form {
+    display: flex;
+}
+
+.add-app-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 240px;
+}
+
+.add-app-form label {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.add-app-form input[type="text"],
+.add-app-form input[type="url"] {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    font-size: 0.875rem;
+    background-color: #020617;
+    color: #e5e7eb;
+}
+
+.add-app-form select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    font-size: 0.875rem;
+    background-color: #020617;
+    color: #e5e7eb;
+}
+
+/* شبكة الإحصائيات */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background-color: #020617;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e1e4e8;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.stat-header h3 {
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.stat-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-change {
+    font-size: 0.875rem;
+}
+
+.stat-change.positive {
+    color: #22c55e;
+}
+
+/* شبكة التطبيقات */
+.apps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.app-card {
+    background-color: #020617;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e1e4e8;
+}
+
+.app-card.card-disabled {
+    opacity: 0.5;
+    filter: grayscale(0.4);
+}
+
+.app-card.card-disabled .app-actions a.btn-primary,
+.app-card.card-disabled .app-actions a.btn-secondary {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* تظليل البطاقة عند التنبيه عن تكرار الرابط */
+.app-card.card-highlight {
+    animation: cardBlink 0.4s ease-in-out 0s 5 alternate;
+}
+
+@keyframes cardBlink {
+    from {
+        box-shadow: 0 0 0 0px rgba(249, 115, 22, 0.0);
+        transform: translateY(-2px);
+    }
+    to {
+        box-shadow: 0 0 0 3px #f97316, 0 0 20px rgba(249, 115, 22, 0.9);
+        transform: translateY(-4px);
+    }
+}
+
+.app-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.app-info {
+    padding: 16px;
+}
+
+.app-info h3 {
+    margin-bottom: 8px;
+    font-size: 1.125rem;
+}
+
+.app-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6e7681;
+}
+
+/* أزرار الإجراءات داخل بطاقة التطبيق */
+.app-actions {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #0ea5e9, #6366f1);
+    color: #ffffff;
+    border-color: #0ea5e9;
+}
+
+.btn-secondary {
+    background-color: #020617;
+    color: #e5e7eb;
+    border-color: #1f2937;
+}
+
+/* زر حذف التطبيق في وضع إدارة التنزيلات */
+.delete-btn {
+    display: none;
+    background-color: #dc2626;
+    border-color: #b91c1c;
+    color: #f9fafb;
+}
+
+body.manage-mode .delete-btn {
+    display: inline-block;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.status.stable {
+    background-color: #16a34a;
+    color: white;
+}
+
+.status.update {
+    background-color: #f97316;
+    color: #111827;
+}
+
+.status.development {
+    background-color: #4b5563;
+    color: white;
+}
+
+.status.review {
+    background-color: #0ea5e9;
+    color: #0f172a;
+}
+
+.status.stopped {
+    background-color: #dc2626;
+    color: #f9fafb;
+}
+
+/* قسم التطبيقات والتبويبات */
+.apps-section {
+    margin-top: 32px;
+}
+
+.tabs-header {
+    display: inline-flex;
+    background-color: #020617;
+    border-radius: 999px;
+    padding: 4px;
+    border: 1px solid #111827;
+    margin-bottom: 16px;
+}
+
+.tab-button {
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+}
+
+.tab-button.active {
+    background: linear-gradient(90deg, #0ea5e9, #6366f1);
+    color: #f9fafb;
+}
+
+.tabs-content {
+    margin-top: 8px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.app-description {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-bottom: 8px;
+}
+
+.field-hint {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* زر تعديل التطبيق (يظهر في وضع إدارة التنزيلات) */
+.edit-btn {
+    display: none;
+    background-color: #f59e0b;
+    border-color: #d97706;
+    color: #111827;
+}
+
+body.manage-mode .edit-btn {
+    display: inline-block;
+}
+
+/* نموذج التعديل داخل بطاقة التطبيق */
+.app-edit-form {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #1f2937;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.app-edit-form .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.app-edit-form label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.app-edit-form input[type="text"],
+.app-edit-form input[type="url"] {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    background-color: #020617;
+    color: #e5e7eb;
+    font-size: 0.8rem;
+}
+
+.app-edit-form select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    background-color: #020617;
+    color: #e5e7eb;
+    font-size: 0.8rem;
+}
+
+.app-edit-form .edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 768px) {
+    .header-left .search-box {
+        display: none;
+    }
+    
+    .sidebar {
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-right: 0;
+    }
+    
+    .stats-grid, .apps-grid {
+        grid-template-columns: 1fr;
+    }
+}

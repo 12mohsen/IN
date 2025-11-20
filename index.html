@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة التطبيقات | لوحة التحكم</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- إضافة الخط العربي Cairo من Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- إضافة Font Awesome للأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- شريط التنقل العلوي -->
+    <header class="header">
+        <div class="header-right">
+            <img src="https://picsum.photos/40" alt="شعار النظام" class="logo">
+            <h1>نظام إدارة التطبيقات</h1>
+        </div>
+        <div class="header-left">
+            <div class="search-box">
+                <input type="search" placeholder="ابحث عن تطبيق أو إحصائية...">
+                <i class="fas fa-search"></i>
+            </div>
+            <button class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="badge">٣</span>
+            </button>
+            <button class="profile-btn">
+                <i class="fas fa-user"></i>
+                <span>الملف الشخصي</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- القائمة الجانبية -->
+        <aside class="sidebar">
+            <div class="app-selector">
+                <button id="appSelectorBtn">
+                    <span>تطبيق المتجر الذكي</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="app-dropdown" id="appDropdown">
+                    <div class="app-dropdown-header">
+                        <h4>التطبيقات المتاحة</h4>
+                        <span class="app-count">6 تطبيقات</span>
+                    </div>
+                    <div class="app-list">
+                        <a href="#" class="app-item active">
+                            <img src="https://picsum.photos/40" alt="تطبيق المتجر الذكي">
+                            <div class="app-item-info">
+                                <span class="app-name">تطبيق المتجر الذكي</span>
+                                <span class="app-status stable">جاهز</span>
+                            </div>
+                        </a>
+                        <a href="#" class="app-item">
+                            <img src="https://picsum.photos/41" alt="تطبيق المحفظة الإلكترونية">
+                            <div class="app-item-info">
+                                <span class="app-name">تطبيق المحفظة الإلكترونية</span>
+                                <span class="app-status stable">جاهز</span>
+                            </div>
+                        </a>
+                        <a href="#" class="app-item">
+                            <img src="https://picsum.photos/42" alt="تطبيق التوصيل السريع">
+                            <div class="app-item-info">
+                                <span class="app-name">تطبيق التوصيل السريع</span>
+                                <span class="app-status stable">جاهز</span>
+                            </div>
+                        </a>
+                        <a href="#" class="app-item">
+                            <img src="https://picsum.photos/43" alt="تطبيق المواعيد">
+                            <div class="app-item-info">
+                                <span class="app-name">تطبيق المواعيد</span>
+                                <span class="app-status stable">مستقر</span>
+                            </div>
+                        </a>
+                        <a href="#" class="app-item">
+                            <img src="https://picsum.photos/44" alt="تطبيق الخدمات">
+                            <div class="app-item-info">
+                                <span class="app-name">تطبيق الخدمات</span>
+                                <span class="app-status stable">مستقر</span>
+                            </div>
+                        </a>
+                        <a href="#" class="app-item">
+                            <img src="https://picsum.photos/45" alt="تطبيق المراسلات">
+                            <div class="app-item-info">
+                                <span class="app-name">تطبيق المراسلات</span>
+                                <span class="app-status stable">جاهز</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <a href="#" class="active"><i class="fas fa-home"></i> الرئيسية</a>
+                <a href="#"><i class="fas fa-chart-bar"></i> الإحصائيات</a>
+                <a href="#" id="downloadsNav"><i class="fas fa-download"></i> إدارة التنزيلات</a>
+                <a href="#"><i class="fas fa-headset"></i> الدعم الفني</a>
+                <a href="#"><i class="fas fa-file-alt"></i> التقارير والتحليل</a>
+            </nav>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- قسم الترحيب -->
+            <div class="welcome-banner">
+                <h2>مرحباً بك في نظام إدارة التطبيقات</h2>
+                <p>منصة متكاملة لمتابعة وتحليل أداء تطبيقاتك بكل سهولة</p>
+            </div>
+
+            <!-- قسم الإحصائيات -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>إجمالي التنزيلات</h3>
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value">12,543</span>
+                        <span class="stat-change positive">زيادة 12.5%</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>المستخدمين النشطين</h3>
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value">8,234</span>
+                        <span class="stat-change positive">زيادة 5.2%</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>معدل استخدام التطبيق</h3>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value">76%</span>
+                        <span class="stat-change positive">زيادة 3.1%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم التطبيقات مع تبويبات -->
+            <div class="apps-section">
+                <!-- نموذج تغيير الرقم السري لحذف التطبيقات -->
+                <form id="changeDeletePasswordForm" class="add-app-form password-form">
+                    <div class="form-group">
+                        <label for="oldDeletePassword">الرقم السري الحالي</label>
+                        <input type="password" id="oldDeletePassword" placeholder="الرقم السري المستخدم للحذف" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newDeletePassword">الرقم السري الجديد</label>
+                        <input type="password" id="newDeletePassword" placeholder="اختر رقمًا سريًا جديدًا" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">تحديث الرقم السري للحذف</button>
+                </form>
+
+                <div class="tabs-header">
+                    <button class="tab-button active" data-tab="webAppsTab"><i class="fas fa-globe"></i> تطبيقات الويب</button>
+                    <button class="tab-button" data-tab="apkAppsTab"><i class="fas fa-android"></i> تطبيقات أندرويد (APK)</button>
+                </div>
+
+                <div class="tabs-content">
+                    <!-- تبويب تطبيقات الويب -->
+                    <section id="webAppsTab" class="tab-pane active">
+                        <h2 class="section-title">تطبيقات الويب</h2>
+
+                        <!-- نموذج إضافة تطبيق ويب جديد -->
+                        <form id="addWebAppForm" class="add-app-form">
+                            <div class="form-group">
+                                <label for="appNameInput">اسم التطبيق</label>
+                                <input type="text" id="appNameInput" placeholder="مثال: إدارة المهام" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="appUrlInput">رابط الموقع</label>
+                                <input type="url" id="appUrlInput" placeholder="https://example.netlify.app" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="appDescriptionInput">وصف قصير للتطبيق</label>
+                                <input type="text" id="appDescriptionInput" placeholder="سطر يشرح فكرة التطبيق (اختياري)">
+                            </div>
+                            <div class="form-group">
+                                <label for="appStatusSelect">حالة التطبيق</label>
+                                <select id="appStatusSelect">
+                                    <option value="ready" selected>جاهز</option>
+                                    <option value="review">قيد المراجعة</option>
+                                    <option value="develop">قيد التطوير</option>
+                                    <option value="stopped">متوقف</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">إضافة تطبيق ويب</button>
+                        </form>
+
+                        <div class="apps-grid" id="webAppsGrid">
+                            <div class="app-card">
+                                <img src="https://picsum.photos/300/200" alt="تطبيق المتجر الذكي">
+                                <div class="app-info">
+                                    <h3>الشتاء</h3>
+                                    <p class="app-description">موقع ويب يعرض تجربة واجهة الشتاء وتنسيقاتها.</p>
+                                    <div class="app-meta">
+                                        <span>تطبيق ويب - الإصدار 1.0.0</span>
+                                        <span class="status stable">جاهز</span>
+                                    </div>
+                                    <div class="app-actions">
+                                        <a href="https://merry-otter-c0d0b2.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
+                                        <a href="https://merry-otter-c0d0b2.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn edit-btn">تعديل التطبيق</button>
+                                        <button type="button" class="btn delete-btn">حذف التطبيق</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="app-card">
+                                <img src="https://picsum.photos/300/201" alt="تطبيق المحفظة الإلكترونية">
+                                <div class="app-info">
+                                    <h3>مؤشر توقع العملات الرقمية</h3>
+                                    <p class="app-description">أداة لعرض توقعات وتحليلات العملات الرقمية.</p>
+                                    <div class="app-meta">
+                                        <span>تطبيق ويب - الإصدار 1.0.0</span>
+                                        <span class="status stable">جاهز</span>
+                                    </div>
+                                    <div class="app-actions">
+                                        <a href="https://stately-cassata-b0d214.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
+                                        <a href="https://stately-cassata-b0d214.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn edit-btn">تعديل التطبيق</button>
+                                        <button type="button" class="btn delete-btn">حذف التطبيق</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="app-card">
+                                <img src="https://picsum.photos/300/202" alt="تطبيق التوصيل السريع">
+                                <div class="app-info">
+                                    <h3>تطبيق الأسهم السعودية</h3>
+                                    <p class="app-description">واجهة لمتابعة أسعار الأسهم السعودية ومؤشراتها.</p>
+                                    <div class="app-meta">
+                                        <span>تطبيق ويب - الإصدار 1.0.0</span>
+                                        <span class="status stable">جاهز</span>
+                                    </div>
+                                    <div class="app-actions">
+                                        <a href="https://glowing-dragon-8d2a14.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
+                                        <a href="https://glowing-dragon-8d2a14.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة المشروع</a>
+                                        <button type="button" class="btn edit-btn">تعديل التطبيق</button>
+                                        <button type="button" class="btn delete-btn">حذف التطبيق</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="app-card">
+                                <img src="https://picsum.photos/300/203" alt="عملات مشفره">
+                                <div class="app-info">
+                                    <h3>عملات مشفره</h3>
+                                    <p class="app-description">تطبيق لعرض معلومات عامة حول العملات المشفرة.</p>
+                                    <div class="app-meta">
+                                        <span>تطبيق ويب - الإصدار 1.0.0</span>
+                                        <span class="status stable">مستقر</span>
+                                    </div>
+                                    <div class="app-actions">
+                                        <a href="https://serene-froyo-216908.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
+                                        <a href="https://serene-froyo-216908.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn edit-btn">تعديل التطبيق</button>
+                                        <button type="button" class="btn delete-btn">حذف التطبيق</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="app-card">
+                                <img src="https://picsum.photos/300/204" alt="إدارة الميزانية الشخصية">
+                                <div class="app-info">
+                                    <h3>إدارة الميزانية الشخصية</h3>
+                                    <p class="app-description">تطبيق لمتابعة المصاريف وإدارة الميزانية الشخصية.</p>
+                                    <div class="app-meta">
+                                        <span>تطبيق ويب - الإصدار 1.0.0</span>
+                                        <span class="status stable">مستقر</span>
+                                    </div>
+                                    <div class="app-actions">
+                                        <a href="https://melodious-griffin-127d9d.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
+                                        <a href="https://melodious-griffin-127d9d.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn edit-btn">تعديل التطبيق</button>
+                                        <button type="button" class="btn delete-btn">حذف التطبيق</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- تبويب تطبيقات أندرويد (APK) -->
+                    <section id="apkAppsTab" class="tab-pane">
+                        <h2 class="section-title">تطبيقات أندرويد (APK)</h2>
+
+                        <!-- نموذج إضافة تطبيق أندرويد جديد -->
+                        <form id="addApkAppForm" class="add-app-form">
+                            <div class="form-group">
+                                <label for="appApkNameInput">اسم تطبيق الأندرويد</label>
+                                <input type="text" id="appApkNameInput" placeholder="مثال: إدارة المهام (أندرويد)" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="appApkUrlInput">رابط ملف APK</label>
+                                <input type="url" id="appApkUrlInput" placeholder="https://example.com/app.apk" required>
+                                <small class="field-hint">يمكن أن يكون الرابط خارجيًا (Google Drive وغيرها) أو داخليًا داخل المشروع مثل app.apk.</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="appApkDescriptionInput">وصف قصير للتطبيق</label>
+                                <input type="text" id="appApkDescriptionInput" placeholder="سطر يشرح فكرة التطبيق (اختياري)">
+                            </div>
+                            <div class="form-group">
+                                <label for="appApkStatusSelect">حالة التطبيق</label>
+                                <select id="appApkStatusSelect">
+                                    <option value="ready" selected>جاهز</option>
+                                    <option value="review">قيد المراجعة</option>
+                                    <option value="develop">قيد التطوير</option>
+                                    <option value="stopped">متوقف</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">إضافة تطبيق أندرويد</button>
+                        </form>
+
+                        <div class="apps-grid" id="apkAppsGrid">
+                            <!-- يتم إضافة بطاقات تطبيقات أندرويد هنا ديناميكياً من النموذج -->
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
