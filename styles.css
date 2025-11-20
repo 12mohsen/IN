@@ -611,20 +611,22 @@ body.manage-mode .edit-btn {
     .header-left .search-box {
         display: none;
     }
-    
+
+    /* إبقاء القائمة الجانبية ظاهرة في الجوال حتى تعمل الأقسام داخل تطبيق APK */
     .sidebar {
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
+        transform: none;
+        transition: none;
     }
-    
+
     .sidebar.active {
-        transform: translateX(0);
+        transform: none;
     }
-    
+
+    /* نحافظ على نفس الهامش مثل سطح المكتب حتى لا يغطي المحتوى */
     .main-content {
-        margin-right: 0;
+        margin-right: 256px;
     }
-    
+
     .stats-grid, .apps-grid {
         grid-template-columns: 1fr;
     }
