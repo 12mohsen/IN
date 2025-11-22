@@ -159,17 +159,19 @@
                         <input type="password" id="newDeletePassword" placeholder="اختر رقمًا سريًا جديدًا" required>
                     </div>
                     <button type="submit" class="btn btn-secondary">تحديث الرقم السري للحذف</button>
+                    <button type="button" id="resetDeletePasswordBtn" class="btn" style="margin-right: 8px;">نسيت الرقم السري؟ إعادة تعيين</button>
                 </form>
 
                 <div class="tabs-header">
                     <button class="tab-button active" data-tab="webAppsTab"><i class="fas fa-globe"></i> تطبيقات الويب</button>
                     <button class="tab-button" data-tab="apkAppsTab"><i class="fas fa-android"></i> تطبيقات أندرويد (APK)</button>
+                    <button class="tab-button" data-tab="socialAppsTab"><i class="fas fa-hashtag"></i> تطبيقات السوشيال ميديا</button>
                 </div>
 
                 <div class="tabs-content">
                     <!-- تبويب تطبيقات الويب -->
                     <section id="webAppsTab" class="tab-pane active">
-                        <h2 class="section-title">تطبيقات الويب</h2>
+                        <h2 class="section-title">تطبيقات الويب <span id="webAppsCount" class="section-app-count"></span></h2>
 
                         <!-- نموذج إضافة تطبيق ويب جديد -->
                         <form id="addWebAppForm" class="add-app-form">
@@ -288,7 +290,7 @@
 
                     <!-- تبويب تطبيقات أندرويد (APK) -->
                     <section id="apkAppsTab" class="tab-pane">
-                        <h2 class="section-title">تطبيقات أندرويد (APK)</h2>
+                        <h2 class="section-title">تطبيقات أندرويد (APK) <span id="apkAppsCount" class="section-app-count"></span></h2>
 
                         <!-- نموذج إضافة تطبيق أندرويد جديد -->
                         <form id="addApkAppForm" class="add-app-form">
@@ -319,6 +321,40 @@
 
                         <div class="apps-grid" id="apkAppsGrid">
                             <!-- يتم إضافة بطاقات تطبيقات أندرويد هنا ديناميكياً من النموذج -->
+                        </div>
+                    </section>
+
+                    <!-- تبويب تطبيقات السوشيال ميديا -->
+                    <section id="socialAppsTab" class="tab-pane">
+                        <h2 class="section-title">تطبيقات السوشيال ميديا <span id="socialAppsCount" class="section-app-count"></span></h2>
+
+                        <!-- نموذج إضافة تطبيق سوشيال ميديا جديد -->
+                        <form id="addSocialAppForm" class="add-app-form">
+                            <div class="form-group">
+                                <label for="socialAppNameInput">اسم التطبيق</label>
+                                <input type="text" id="socialAppNameInput" placeholder="مثال: قناة اليوتيوب" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="socialAppUrlInput">رابط الحساب / الصفحة</label>
+                                <input type="url" id="socialAppUrlInput" placeholder="https://example.com/profile" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="socialAppDescriptionInput">وصف قصير</label>
+                                <input type="text" id="socialAppDescriptionInput" placeholder="سطر يشرح نوع المحتوى (اختياري)">
+                            </div>
+                            <div class="form-group">
+                                <label for="socialAppStatusSelect">حالة التطبيق</label>
+                                <select id="socialAppStatusSelect">
+                                    <option value="important" selected>مهم</option>
+                                    <option value="later">للمشاهدة لاحقاً</option>
+                                    <option value="normal">عادي</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">إضافة تطبيق سوشيال ميديا</button>
+                        </form>
+
+                        <div class="apps-grid" id="socialAppsGrid">
+                            <!-- يتم إضافة بطاقات تطبيقات السوشيال ميديا هنا ديناميكياً من النموذج -->
                         </div>
                     </section>
                 </div>

@@ -10,6 +10,92 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // دالة مساعدة لاستخراج اسم الدومين من الرابط
+    function getDomainLabel(url) {
+        try {
+            const u = new URL(url);
+            return u.hostname.replace(/^www\./i, '');
+        } catch (e) {
+            return url;
+        }
+    }
+
+    // التعامل مع نموذج إضافة تطبيق سوشيال ميديا جديد
+    const addSocialAppForm = document.getElementById('addSocialAppForm');
+    const socialAppNameInput = document.getElementById('socialAppNameInput');
+    const socialAppUrlInput = document.getElementById('socialAppUrlInput');
+    const socialAppDescriptionInput = document.getElementById('socialAppDescriptionInput');
+    const socialAppStatusSelect = document.getElementById('socialAppStatusSelect');
+    const socialAppsGrid = document.getElementById('socialAppsGrid');
+
+    if (addSocialAppForm && socialAppNameInput && socialAppUrlInput && socialAppsGrid) {
+        addSocialAppForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = socialAppNameInput.value.trim();
+            const url = socialAppUrlInput.value.trim();
+            let desc = socialAppDescriptionInput ? socialAppDescriptionInput.value.trim() : '';
+            const statusValue = socialAppStatusSelect ? socialAppStatusSelect.value : 'important';
+
+            if (!name || !url) {
+                return;
+            }
+
+            const normalizedUrl = url.trim();
+            // فحص الرابط في جميع الأقسام
+            const duplicate = findUrlInAllSections(normalizedUrl);
+            if (duplicate) {
+                const goToExisting = confirm(`هذا الرابط مضاف مسبقاً في قسم: ${duplicate.sectionLabel}.\n\nاضغط موافق للانتقال إلى البطاقة الموجودة، أو إلغاء لإضافته مرة أخرى هنا في قسم السوشيال ميديا.`);
+                if (goToExisting) {
+                    highlightExistingCardById(duplicate.appId, duplicate.gridSelector);
+                    return;
+                }
+            }
+
+            // توليد وصف يعتمد على الدومين في كل الأحوال
+            const domain = getDomainLabel(normalizedUrl);
+            if (!desc) {
+                // إذا لم يكتب المستخدم وصفًا، نستخدم الوصف التلقائي فقط
+                desc = `حساب سوشيال ميديا على: ${domain}`;
+            } else {
+                // إذا كتب وصفًا، نضيف الوصف التلقائي بعده
+                desc = `${desc} - حساب سوشيال ميديا على: ${domain}`;
+            }
+
+            // تحديد نص الحالة والكلاس حسب الاختيار (مهم / للمشاهدة لاحقاً / عادي)
+            let statusText = 'مهم';
+            let statusClass = 'update'; // برتقالي
+            if (statusValue === 'later') {
+                statusText = 'للمشاهدة لاحقاً';
+                statusClass = 'review'; // أزرق
+            } else if (statusValue === 'normal') {
+                statusText = 'عادي';
+                statusClass = 'stable'; // أخضر
+            }
+
+            const appData = {
+                id: Date.now().toString() + Math.random().toString(16).slice(2),
+                name,
+                url: normalizedUrl,
+                desc,
+                statusText,
+                statusClass
+            };
+
+            socialApps.push(appData);
+            saveSocialApps();
+
+            createSocialCardFromData(appData);
+            updateSectionCounts();
+
+            // تفريغ الحقول بعد الإضافة
+            socialAppNameInput.value = '';
+            socialAppUrlInput.value = '';
+            if (socialAppDescriptionInput) socialAppDescriptionInput.value = '';
+            if (socialAppStatusSelect) socialAppStatusSelect.value = 'important';
+        });
+    }
+
     // تفعيل مربع البحث عن تطبيق أو إحصائية
     const searchInput = document.querySelector('.search-box input');
 
@@ -53,6 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const combined = `${title} ${value}`;
             card.style.display = combined.includes(q) ? '' : 'none';
         });
+
+        // بعد تغيير إظهار/إخفاء البطاقات، نحدّث عداد التطبيقات في كل قسم
+        updateSectionCounts();
     }
 
     if (searchInput) {
@@ -130,8 +219,19 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('سيتم عرض إعدادات الملف الشخصي هنا');
     });
 
-    // رقم سري لحذف التطبيقات في وضع إدارة التنزيلات (قابل للتغيير)
+    // رقم سري لحذف التطبيقات في وضع إدارة التنزيلات (قابل للتغيير) مع تخزينه في localStorage
+    const DELETE_PASSWORD_KEY = 'dashboard_delete_password';
     let deletePassword = '1234';
+
+    try {
+        const storedPwd = localStorage.getItem(DELETE_PASSWORD_KEY);
+        if (storedPwd) {
+            deletePassword = storedPwd;
+        }
+    } catch (e) {
+        // إذا حدث خطأ في قراءة localStorage نستخدم القيمة الافتراضية
+        deletePassword = '1234';
+    }
 
     // تفعيل وضع إدارة التنزيلات من القائمة الجانبية
     const downloadsNav = document.getElementById('downloadsNav');
@@ -165,9 +265,36 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             deletePassword = newPwd;
+            try {
+                localStorage.setItem(DELETE_PASSWORD_KEY, deletePassword);
+            } catch (e) {}
             oldDeletePasswordInput.value = '';
             newDeletePasswordInput.value = '';
             alert('تم تحديث الرقم السري لحذف التطبيقات بنجاح.');
+        });
+    }
+
+    // زر إعادة تعيين الرقم السري في حال نسيانه
+    const resetDeletePasswordBtn = document.getElementById('resetDeletePasswordBtn');
+    if (resetDeletePasswordBtn) {
+        resetDeletePasswordBtn.addEventListener('click', function () {
+            const newPwd = prompt('لقد نسيت الرقم السري الحالي.\n\nاكتب كلمة أو أرقام جديدة لتكون الرقم السري الجديد للحذف:');
+            if (!newPwd) {
+                alert('لم يتم إدخال رقم سري جديد. لم يتم التغيير.');
+                return;
+            }
+
+            const confirmReset = confirm(`سيتم تعيين الرقم السري الجديد للحذف إلى:\n\n${newPwd}\n\nهل أنت متأكد من المتابعة؟`);
+            if (!confirmReset) {
+                return;
+            }
+
+            deletePassword = newPwd;
+            try {
+                localStorage.setItem(DELETE_PASSWORD_KEY, deletePassword);
+            } catch (e) {}
+
+            alert('تمت إعادة تعيين الرقم السري للحذف بنجاح.');
         });
     }
 
@@ -225,14 +352,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const appId = card.dataset.appId;
             if (appId) {
-                // بطاقات مضافة ديناميكياً (ويب أو أندرويد)
-                const isWeb = card.closest('#webAppsGrid') !== null;
-                if (isWeb) {
+                // بطاقات مضافة ديناميكياً (ويب أو أندرويد أو سوشيال)
+                const inWeb = card.closest('#webAppsGrid') !== null;
+                const inApk = card.closest('#apkAppsGrid') !== null;
+                const inSocial = card.closest('#socialAppsGrid') !== null;
+
+                if (inWeb) {
                     webApps = webApps.filter(app => app.id !== appId);
                     saveWebApps();
-                } else {
+                } else if (inApk) {
                     apkApps = apkApps.filter(app => app.id !== appId);
                     saveApkApps();
+                } else if (inSocial) {
+                    socialApps = socialApps.filter(app => app.id !== appId);
+                    saveSocialApps();
                 }
             } else {
                 // بطاقة ثابتة من HTML: نحفظ اسمها ورابطها حتى لا تعود بعد التحديث
@@ -251,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             card.remove();
+            updateSectionCounts();
         });
     }
 
@@ -269,6 +403,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const secondaryLink = card.querySelector('.app-actions a.btn-secondary');
             const statusSpan = card.querySelector('.app-meta .status');
 
+            const inWeb = card.closest('#webAppsGrid') !== null;
+            const inApk = card.closest('#apkAppsGrid') !== null;
+            const inSocial = card.closest('#socialAppsGrid') !== null;
+
             const currentName = titleEl ? titleEl.textContent.trim() : '';
             const currentDesc = descEl ? descEl.textContent.trim() : '';
             const currentUrl = primaryLink ? primaryLink.getAttribute('href') : '';
@@ -276,11 +414,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const currentStatusClass = statusSpan ? statusSpan.classList[1] || 'stable' : 'stable';
 
             let currentStatusValue = 'ready';
-            if (currentStatusClass === 'review') currentStatusValue = 'review';
-            else if (currentStatusClass === 'development') currentStatusValue = 'develop';
-            else if (currentStatusClass === 'stopped') currentStatusValue = 'stopped';
+            // خريطة الحالات حسب القسم
+            if (inSocial) {
+                if (currentStatusClass === 'update') currentStatusValue = 'important';
+                else if (currentStatusClass === 'review') currentStatusValue = 'later';
+                else currentStatusValue = 'normal';
+            } else {
+                if (currentStatusClass === 'review') currentStatusValue = 'review';
+                else if (currentStatusClass === 'development') currentStatusValue = 'develop';
+                else if (currentStatusClass === 'stopped') currentStatusValue = 'stopped';
+            }
 
             card.classList.add('editing');
+
+            // إنشاء HTML خيارات حالة التطبيق حسب القسم
+            let statusOptionsHtml = '';
+            if (inSocial) {
+                statusOptionsHtml = `
+                    <option value="important" ${currentStatusValue === 'important' ? 'selected' : ''}>مهم</option>
+                    <option value="later" ${currentStatusValue === 'later' ? 'selected' : ''}>للمشاهدة لاحقاً</option>
+                    <option value="normal" ${currentStatusValue === 'normal' ? 'selected' : ''}>عادي</option>
+                `;
+            } else {
+                statusOptionsHtml = `
+                    <option value="ready" ${currentStatusValue === 'ready' ? 'selected' : ''}>جاهز</option>
+                    <option value="review" ${currentStatusValue === 'review' ? 'selected' : ''}>قيد المراجعة</option>
+                    <option value="develop" ${currentStatusValue === 'develop' ? 'selected' : ''}>قيد التطوير</option>
+                    <option value="stopped" ${currentStatusValue === 'stopped' ? 'selected' : ''}>متوقف</option>
+                `;
+            }
 
             // إنشاء نموذج التعديل داخل البطاقة
             const editForm = document.createElement('div');
@@ -301,10 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="form-row">
                     <label>حالة التطبيق</label>
                     <select class="edit-status">
-                        <option value="ready" ${currentStatusValue === 'ready' ? 'selected' : ''}>جاهز</option>
-                        <option value="review" ${currentStatusValue === 'review' ? 'selected' : ''}>قيد المراجعة</option>
-                        <option value="develop" ${currentStatusValue === 'develop' ? 'selected' : ''}>قيد التطوير</option>
-                        <option value="stopped" ${currentStatusValue === 'stopped' ? 'selected' : ''}>متوقف</option>
+                        ${statusOptionsHtml}
                     </select>
                 </div>
                 <div class="edit-actions">
@@ -373,15 +532,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 // تحديث الحالة النصية والكلاس
                 let statusText = 'جاهز';
                 let statusClass = 'stable';
-                if (statusValue === 'review') {
-                    statusText = 'قيد المراجعة';
-                    statusClass = 'review';
-                } else if (statusValue === 'develop') {
-                    statusText = 'قيد التطوير';
-                    statusClass = 'development';
-                } else if (statusValue === 'stopped') {
-                    statusText = 'متوقف';
-                    statusClass = 'stopped';
+                if (inSocial) {
+                    if (statusValue === 'important') {
+                        statusText = 'مهم';
+                        statusClass = 'update';
+                    } else if (statusValue === 'later') {
+                        statusText = 'للمشاهدة لاحقاً';
+                        statusClass = 'review';
+                    } else {
+                        statusText = 'عادي';
+                        statusClass = 'stable';
+                    }
+                } else {
+                    if (statusValue === 'review') {
+                        statusText = 'قيد المراجعة';
+                        statusClass = 'review';
+                    } else if (statusValue === 'develop') {
+                        statusText = 'قيد التطوير';
+                        statusClass = 'development';
+                    } else if (statusValue === 'stopped') {
+                        statusText = 'متوقف';
+                        statusClass = 'stopped';
+                    }
                 }
 
                 if (statusSpan) {
@@ -396,22 +568,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.classList.remove('card-disabled');
                 }
 
-                // إذا كانت البطاقة من التطبيقات المحفوظة، نحدّث بياناتها في webApps أو apkApps
+                // إذا كانت البطاقة من التطبيقات المحفوظة، نحدّث بياناتها في المصفوفة المناسبة (ويب / أندرويد / سوشيال)
                 const appId = card.dataset.appId;
                 if (appId) {
-                    const isWeb = card.closest('#webAppsGrid') !== null;
-                    const list = isWeb ? webApps : apkApps;
-                    const index = list.findIndex(app => app.id === appId);
-                    if (index !== -1) {
-                        list[index].name = newName;
-                        list[index].url = newUrl;
-                        list[index].desc = newDesc;
-                        list[index].statusText = statusText;
-                        list[index].statusClass = statusClass;
-                        if (isWeb) {
-                            saveWebApps();
-                        } else {
-                            saveApkApps();
+                    const inWeb = card.closest('#webAppsGrid') !== null;
+                    const inApk = card.closest('#apkAppsGrid') !== null;
+                    const inSocial = card.closest('#socialAppsGrid') !== null;
+
+                    let list = null;
+                    if (inWeb) list = webApps;
+                    else if (inApk) list = apkApps;
+                    else if (inSocial) list = socialApps;
+
+                    if (list) {
+                        const index = list.findIndex(app => app.id === appId);
+                        if (index !== -1) {
+                            list[index].name = newName;
+                            list[index].url = newUrl;
+                            list[index].desc = newDesc;
+                            list[index].statusText = statusText;
+                            list[index].statusClass = statusClass;
+
+                            if (inWeb) saveWebApps();
+                            else if (inApk) saveApkApps();
+                            else if (inSocial) saveSocialApps();
                         }
                     }
                 }
@@ -428,12 +608,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // مصفوفات للتخزين في localStorage
     let webApps = [];
     let apkApps = [];
+    let socialApps = [];
     // قائمة مفاتيح البطاقات الثابتة المحذوفة (اسم + رابط)
     let deletedStaticCardKeys = [];
 
     // مفاتيح التخزين المحلية
     const WEB_APPS_KEY = 'dashboard_web_apps';
     const APK_APPS_KEY = 'dashboard_apk_apps';
+    const SOCIAL_APPS_KEY = 'dashboard_social_apps';
     const DELETED_STATIC_KEY = 'dashboard_deleted_static_cards';
 
     function saveWebApps() {
@@ -444,8 +626,75 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem(APK_APPS_KEY, JSON.stringify(apkApps));
     }
 
+    function saveSocialApps() {
+        localStorage.setItem(SOCIAL_APPS_KEY, JSON.stringify(socialApps));
+    }
+
     function saveDeletedStaticCards() {
         localStorage.setItem(DELETED_STATIC_KEY, JSON.stringify(deletedStaticCardKeys));
+    }
+
+    // دالة لتحديث عدد التطبيقات في كل قسم
+    function updateSectionCounts() {
+        const webGrid = document.getElementById('webAppsGrid');
+        const apkGrid = document.getElementById('apkAppsGrid');
+        const socialGrid = document.getElementById('socialAppsGrid');
+
+        const webCountEl = document.getElementById('webAppsCount');
+        const apkCountEl = document.getElementById('apkAppsCount');
+        const socialCountEl = document.getElementById('socialAppsCount');
+
+        const webCount = webGrid
+            ? Array.from(webGrid.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none').length
+            : 0;
+        const apkCount = apkGrid
+            ? Array.from(apkGrid.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none').length
+            : 0;
+        const socialCount = socialGrid
+            ? Array.from(socialGrid.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none').length
+            : 0;
+
+        if (webCountEl) webCountEl.textContent = `(${webCount})`;
+        if (apkCountEl) apkCountEl.textContent = `(${apkCount})`;
+        if (socialCountEl) socialCountEl.textContent = `(${socialCount})`;
+    }
+
+    // دالة عامة للبحث عن رابط في جميع الأقسام
+    function findUrlInAllSections(normalizedUrl) {
+        // البحث في تطبيقات الويب
+        const webMatch = webApps.find(app => app.url === normalizedUrl);
+        if (webMatch) {
+            return {
+                sectionKey: 'web',
+                sectionLabel: 'تطبيقات الويب',
+                gridSelector: '#webAppsGrid',
+                appId: webMatch.id
+            };
+        }
+
+        // البحث في تطبيقات الأندرويد APK
+        const apkMatch = apkApps.find(app => app.url === normalizedUrl);
+        if (apkMatch) {
+            return {
+                sectionKey: 'apk',
+                sectionLabel: 'تطبيقات أندرويد (APK)',
+                gridSelector: '#apkAppsGrid',
+                appId: apkMatch.id
+            };
+        }
+
+        // البحث في تطبيقات السوشيال ميديا
+        const socialMatch = socialApps.find(app => app.url === normalizedUrl);
+        if (socialMatch) {
+            return {
+                sectionKey: 'social',
+                sectionLabel: 'تطبيقات السوشيال ميديا',
+                gridSelector: '#socialAppsGrid',
+                appId: socialMatch.id
+            };
+        }
+
+        return null;
     }
 
     function createWebCardFromData(app) {
@@ -475,16 +724,61 @@ document.addEventListener('DOMContentLoaded', function() {
             if (app.statusClass === 'stopped') {
                 card.classList.add('card-disabled');
             }
-            webAppsGrid.appendChild(card);
+            // إضافة في بداية الشبكة
+            if (webAppsGrid.firstChild) {
+                webAppsGrid.insertBefore(card, webAppsGrid.firstChild);
+            } else {
+                webAppsGrid.appendChild(card);
+            }
             attachCardHover(card);
             attachDeleteHandler(card);
             attachEditHandler(card);
         }
     }
 
-    // تظليل بطاقة موجودة والتمرير إليها
+    // دالة مساعدة لتفعيل التبويب المناسب حسب شبكة البطاقات
+    function activateTabForGrid(gridSelector) {
+        let targetTabId = null;
+        if (gridSelector === '#webAppsGrid') {
+            targetTabId = 'webAppsTab';
+        } else if (gridSelector === '#apkAppsGrid') {
+            targetTabId = 'apkAppsTab';
+        } else if (gridSelector === '#socialAppsGrid') {
+            targetTabId = 'socialAppsTab';
+        }
+
+        if (!targetTabId) return;
+
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(btn => {
+            const btnTarget = btn.getAttribute('data-tab');
+            if (btnTarget === targetTabId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        tabPanes.forEach(pane => {
+            if (pane.id === targetTabId) {
+                pane.classList.add('active');
+            } else {
+                pane.classList.remove('active');
+            }
+        });
+    }
+
+    // تظليل بطاقة موجودة والتمرير إليها مع فتح التبويب الصحيح
     function highlightExistingCardById(appId, gridSelector) {
         if (!appId) return;
+
+        // فتح التبويب المناسب أولاً
+        if (gridSelector) {
+            activateTabForGrid(gridSelector);
+        }
+
         const grid = document.querySelector(gridSelector);
         if (!grid) return;
         const card = grid.querySelector(`.app-card[data-app-id="${appId}"]`);
@@ -524,7 +818,51 @@ document.addEventListener('DOMContentLoaded', function() {
             if (app.statusClass === 'stopped') {
                 card.classList.add('card-disabled');
             }
-            apkAppsGrid.appendChild(card);
+            // إضافة في بداية الشبكة
+            if (apkAppsGrid.firstChild) {
+                apkAppsGrid.insertBefore(card, apkAppsGrid.firstChild);
+            } else {
+                apkAppsGrid.appendChild(card);
+            }
+            attachCardHover(card);
+            attachDeleteHandler(card);
+            attachEditHandler(card);
+        }
+    }
+
+    function createSocialCardFromData(app) {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+        card.dataset.appId = app.id;
+        card.innerHTML = `
+            <img src="https://picsum.photos/300/212" alt="${app.name}">
+            <div class="app-info">
+                <h3>${app.name}</h3>
+                ${app.desc ? `<p class="app-description">${app.desc}</p>` : ''}
+                <div class="app-meta">
+                    <span>تطبيق سوشيال ميديا</span>
+                    <span class="status ${app.statusClass}">${app.statusText}</span>
+                </div>
+                <div class="app-actions">
+                    <a href="${app.url}" class="btn btn-primary" target="_blank">زيارة / فتح الحساب</a>
+                    <a href="${app.url}" class="btn btn-secondary" target="_blank">فتح في تبويب جديد</a>
+                    <button type="button" class="btn edit-btn">تعديل التطبيق</button>
+                    <button type="button" class="btn delete-btn">حذف التطبيق</button>
+                </div>
+            </div>
+        `;
+
+        const socialAppsGrid = document.getElementById('socialAppsGrid');
+        if (socialAppsGrid) {
+            if (app.statusClass === 'stopped') {
+                card.classList.add('card-disabled');
+            }
+            // إضافة في بداية الشبكة
+            if (socialAppsGrid.firstChild) {
+                socialAppsGrid.insertBefore(card, socialAppsGrid.firstChild);
+            } else {
+                socialAppsGrid.appendChild(card);
+            }
             attachCardHover(card);
             attachDeleteHandler(card);
             attachEditHandler(card);
@@ -550,6 +888,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     } catch (e) {
         apkApps = [];
+    }
+
+    try {
+        const storedSocial = localStorage.getItem(SOCIAL_APPS_KEY);
+        if (storedSocial) {
+            socialApps = JSON.parse(storedSocial);
+            socialApps.forEach(app => createSocialCardFromData(app));
+        }
+    } catch (e) {
+        socialApps = [];
     }
 
     try {
@@ -583,6 +931,9 @@ document.addEventListener('DOMContentLoaded', function() {
         attachEditHandler(card);
     });
 
+    // بعد تحميل كل البيانات ومعالجة البطاقات الثابتة المحذوفة، نحدّث عداد التطبيقات لكل قسم
+    updateSectionCounts();
+
     // التعامل مع نموذج إضافة تطبيق ويب جديد
     const addWebAppForm = document.getElementById('addWebAppForm');
     const appNameInput = document.getElementById('appNameInput');
@@ -597,20 +948,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const name = appNameInput.value.trim();
             const url = appUrlInput.value.trim();
-            const desc = appDescriptionInput ? appDescriptionInput.value.trim() : '';
+            let desc = appDescriptionInput ? appDescriptionInput.value.trim() : '';
             const statusValue = appStatusSelect ? appStatusSelect.value : 'ready';
 
             if (!name || !url) {
                 return;
             }
 
-            // منع تكرار نفس الرابط لتطبيقات الويب
             const normalizedUrl = url.trim();
-            const existing = webApps.find(app => app.url === normalizedUrl);
-            if (existing) {
-                alert('هذا الرابط مضاف من قبل لتطبيق ويب. سيتم الانتقال إلى البطاقة الموجودة.');
-                highlightExistingCardById(existing.id, '#webAppsGrid');
-                return;
+            // فحص الرابط في جميع الأقسام
+            const duplicate = findUrlInAllSections(normalizedUrl);
+            if (duplicate) {
+                const goToExisting = confirm(`هذا الرابط مضاف مسبقاً في قسم: ${duplicate.sectionLabel}.\n\nاضغط موافق للانتقال إلى البطاقة الموجودة، أو إلغاء لإضافته مرة أخرى هنا في قسم تطبيقات الويب.`);
+                if (goToExisting) {
+                    highlightExistingCardById(duplicate.appId, duplicate.gridSelector);
+                    return;
+                }
+            }
+
+            // إذا لم يكتب المستخدم وصفًا، نولّد وصفًا تلقائيًا حسب الدومين
+            if (!desc) {
+                const domain = getDomainLabel(normalizedUrl);
+                desc = `موقع ويب على: ${domain}`;
             }
 
             // تحديد نص الحالة والكلاس حسب الاختيار
@@ -640,6 +999,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveWebApps();
 
             createWebCardFromData(appData);
+            updateSectionCounts();
 
             // تفريغ الحقول بعد الإضافة
             appNameInput.value = '';
@@ -663,20 +1023,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const name = appApkNameInput.value.trim();
             const url = appApkUrlInput.value.trim();
-            const desc = appApkDescriptionInput ? appApkDescriptionInput.value.trim() : '';
+            let desc = appApkDescriptionInput ? appApkDescriptionInput.value.trim() : '';
             const statusValue = appApkStatusSelect ? appApkStatusSelect.value : 'ready';
 
             if (!name || !url) {
                 return;
             }
 
-            // منع تكرار نفس الرابط لتطبيقات APK
             const normalizedUrl = url.trim();
-            const existing = apkApps.find(app => app.url === normalizedUrl);
-            if (existing) {
-                alert('هذا الرابط مضاف من قبل لتطبيق أندرويد. سيتم الانتقال إلى البطاقة الموجودة.');
-                highlightExistingCardById(existing.id, '#apkAppsGrid');
-                return;
+            // فحص الرابط في جميع الأقسام
+            const duplicate = findUrlInAllSections(normalizedUrl);
+            if (duplicate) {
+                const goToExisting = confirm(`هذا الرابط مضاف مسبقاً في قسم: ${duplicate.sectionLabel}.\n\nاضغط موافق للانتقال إلى البطاقة الموجودة، أو إلغاء لإضافته مرة أخرى هنا في قسم تطبيقات أندرويد (APK).`);
+                if (goToExisting) {
+                    highlightExistingCardById(duplicate.appId, duplicate.gridSelector);
+                    return;
+                }
             }
 
             // تحديد نص الحالة والكلاس حسب الاختيار
@@ -706,6 +1068,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveApkApps();
 
             createApkCardFromData(appData);
+            updateSectionCounts();
 
             // تفريغ الحقول بعد الإضافة
             appApkNameInput.value = '';
