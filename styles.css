@@ -859,7 +859,9 @@ body.manage-mode .edit-btn {
 
     /* القائمة الجانبية تكون مخفية افتراضيًا وتظهر عند ضغط زر القائمة */
     .sidebar {
-        transform: translateX(100%);
+        right: auto;
+        left: 0;
+        transform: translateX(-100%); /* مخفية بالكامل خارج الشاشة من اليسار */
         transition: transform 0.3s ease;
         z-index: 90;
     }
