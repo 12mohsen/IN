@@ -10,6 +10,116 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // دالة لإضافة منطق المفضلة (إضافة/إزالة) لبطاقة واحدة
+    function attachFavoriteHandler(card, sourceLabel) {
+        const addBtn = card.querySelector('[data-favorite-btn]');
+        const removeBtn = card.querySelector('[data-remove-favorite-btn]');
+        if (!addBtn && !removeBtn) return;
+
+        function getCardInfo() {
+            const titleEl = card.querySelector('.app-info h3');
+            const descEl = card.querySelector('.app-description');
+            const primaryLink = card.querySelector('.app-actions a.btn-primary');
+            const statusSpan = card.querySelector('.app-meta .status');
+            const imgEl = card.querySelector('img');
+
+            const name = titleEl ? titleEl.textContent.trim() : '';
+            const desc = descEl ? descEl.textContent.trim() : '';
+            const url = primaryLink ? primaryLink.getAttribute('href') : '';
+            const statusText = statusSpan ? statusSpan.textContent.trim() : 'جاهز';
+            const statusClass = statusSpan ? (statusSpan.classList[1] || 'stable') : 'stable';
+            const imageSrc = imgEl ? imgEl.getAttribute('src') : '';
+
+            return { name, desc, url, statusText, statusClass, imageSrc };
+        }
+
+        function syncButtons() {
+            const info = getCardInfo();
+            if (!info.name || !info.url) return;
+            const exists = favoriteApps.some(app => app.name === info.name && app.url === info.url);
+
+            if (addBtn) addBtn.style.display = exists ? 'none' : '';
+            if (removeBtn) removeBtn.style.display = exists ? '' : 'none';
+        }
+
+        if (addBtn) {
+            addBtn.addEventListener('click', function () {
+                const { name, desc, url, statusText, statusClass, imageSrc } = getCardInfo();
+
+                if (!name || !url) {
+                    alert('لا يمكن إضافة تطبيق بدون اسم أو رابط إلى المفضلة.');
+                    return;
+                }
+
+                const exists = favoriteApps.some(app => app.name === name && app.url === url);
+                if (exists) {
+                    alert('هذا التطبيق موجود بالفعل في قائمة المفضلة.');
+                    syncButtons();
+                    return;
+                }
+
+                const favData = {
+                    id: Date.now().toString() + Math.random().toString(16).slice(2),
+                    name,
+                    url,
+                    desc,
+                    statusText,
+                    statusClass,
+                    imageSrc,
+                    sourceLabel
+                };
+
+                favoriteApps.push(favData);
+                saveFavoriteApps();
+                createFavoriteCardFromData(favData);
+                updateSectionCounts();
+                syncButtons();
+
+                alert('تمت إضافة التطبيق إلى قائمة المفضلة.');
+            });
+        }
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                const { name, url } = getCardInfo();
+                if (!name || !url) return;
+
+                const beforeLength = favoriteApps.length;
+                favoriteApps = favoriteApps.filter(app => !(app.name === name && app.url === url));
+                if (favoriteApps.length === beforeLength) {
+                    alert('هذا التطبيق غير موجود في قائمة المفضلة.');
+                    syncButtons();
+                    return;
+                }
+
+                saveFavoriteApps();
+
+                // إزالة البطاقات المطابقة من تبويب المفضلة
+                const favoriteGrid = document.getElementById('favoriteAppsGrid');
+                if (favoriteGrid) {
+                    const favCards = favoriteGrid.querySelectorAll('.app-card');
+                    favCards.forEach(favCard => {
+                        const favTitleEl = favCard.querySelector('.app-info h3');
+                        const favPrimaryLink = favCard.querySelector('.app-actions a.btn-primary');
+                        const favName = favTitleEl ? favTitleEl.textContent.trim() : '';
+                        const favUrl = favPrimaryLink ? favPrimaryLink.getAttribute('href') : '';
+                        if (favName === name && favUrl === url) {
+                            favCard.remove();
+                        }
+                    });
+                }
+
+                updateSectionCounts();
+                syncButtons();
+
+                alert('تمت إزالة التطبيق من قائمة المفضلة.');
+            });
+        }
+
+        // مزامنة حالة الأزرار عند التهيئة
+        syncButtons();
+    }
+
     // دالة مساعدة لاستخراج اسم الدومين من الرابط
     function getDomainLabel(url) {
         try {
@@ -201,6 +311,405 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // عناصر قسم الإدارة (الأدمن)
+    const adminNav = document.getElementById('adminNav');
+    const adminSection = document.getElementById('adminSection');
+    const adminUsersBody = document.getElementById('adminUsersBody');
+    const adminUsersCountEl = document.getElementById('adminUsersCount');
+    const adminUsersSearchInput = document.getElementById('adminUsersSearch');
+    const adminAddUserForm = document.getElementById('adminAddUserForm');
+    const adminNewUsernameInput = document.getElementById('adminNewUsername');
+    const adminNewEmailInput = document.getElementById('adminNewEmail');
+    const adminNewPasswordInput = document.getElementById('adminNewPassword');
+
+    // إعدادات الدعم الفني
+    const SUPPORT_SETTINGS_KEY = 'dashboard_support_settings';
+    const adminSupportSettingsForm = document.getElementById('adminSupportSettingsForm');
+    const adminSupportEmailInput = document.getElementById('adminSupportEmail');
+    const adminSupportNoteInput = document.getElementById('adminSupportNote');
+    const adminSupportMethodInput = document.getElementById('adminSupportMethodInput');
+    const addSupportMethodBtn = document.getElementById('addSupportMethodBtn');
+    const adminSupportMethodsList = document.getElementById('adminSupportMethodsList');
+    const supportEmailDisplay = document.getElementById('supportEmailDisplay');
+    const supportNoteDisplay = document.getElementById('supportNoteDisplay');
+    const supportMethodsDisplay = document.getElementById('supportMethodsDisplay');
+    const supportSection = document.getElementById('supportSection');
+    const supportNav = document.getElementById('supportNav');
+
+    let supportMethods = [];
+
+    function renderSupportMethods() {
+        // عرض في قسم الدعم للمستخدمين
+        if (supportMethodsDisplay) {
+            const container = supportMethodsDisplay.closest('.form-group');
+            supportMethodsDisplay.innerHTML = '';
+            if (!supportMethods || supportMethods.length === 0) {
+                // لا نعرض هذا القسم للمستخدمين إذا لم تكن هناك وسائل تواصل أخرى
+                if (container) {
+                    container.style.display = 'none';
+                }
+            } else {
+                if (container) {
+                    container.style.display = '';
+                }
+                supportMethods.forEach(method => {
+                    const li = document.createElement('li');
+                    // إذا كانت الوسيلة رابطاً كاملاً نجعلها كرابط قابل للنقر
+                    if (typeof method === 'string' && (method.startsWith('http://') || method.startsWith('https://'))) {
+                        const a = document.createElement('a');
+                        a.href = method;
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        a.textContent = method;
+                        li.appendChild(a);
+                    } else {
+                        li.textContent = method;
+                    }
+                    supportMethodsDisplay.appendChild(li);
+                });
+            }
+        }
+
+        // عرض في قسم الإدارة (قائمة قابلة للحذف فقط من الواجهة، بدون حذف من التخزين حتى يحفظ الأدمن)
+        if (adminSupportMethodsList) {
+            adminSupportMethodsList.innerHTML = '';
+            if (!supportMethods || supportMethods.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'field-hint';
+                li.textContent = 'لم تتم إضافة أي وسيلة تواصل أخرى بعد.';
+                adminSupportMethodsList.appendChild(li);
+            } else {
+                supportMethods.forEach((method, index) => {
+                    const li = document.createElement('li');
+                    const span = document.createElement('span');
+                    if (typeof method === 'string' && (method.startsWith('http://') || method.startsWith('https://'))) {
+                        const a = document.createElement('a');
+                        a.href = method;
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        a.textContent = method;
+                        span.appendChild(a);
+                    } else {
+                        span.textContent = method;
+                    }
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-secondary';
+                    removeBtn.style.marginRight = '8px';
+                    removeBtn.textContent = 'إزالة';
+                    removeBtn.addEventListener('click', function () {
+                        supportMethods.splice(index, 1);
+                        renderSupportMethods();
+                    });
+
+                    li.appendChild(span);
+                    li.appendChild(removeBtn);
+                    adminSupportMethodsList.appendChild(li);
+                });
+            }
+        }
+    }
+
+    function loadSupportSettings() {
+        let settings = null;
+        try {
+            const raw = localStorage.getItem(SUPPORT_SETTINGS_KEY);
+            if (raw) settings = JSON.parse(raw);
+        } catch (e) {}
+
+        if (!settings) {
+            if (supportEmailDisplay) {
+                supportEmailDisplay.textContent = 'لم يتم إعداد بريد الدعم بعد. يرجى التواصل مع الأدمن لإعداده.';
+            }
+            if (supportNoteDisplay) {
+                supportNoteDisplay.textContent = 'لا توجد بيانات تواصل إضافية حتى الآن.';
+            }
+            supportMethods = [];
+            renderSupportMethods();
+            return;
+        }
+
+        if (supportEmailDisplay) {
+            supportEmailDisplay.textContent = settings.email || 'لم يتم إعداد بريد الدعم بعد. يرجى التواصل مع الأدمن لإعداده.';
+        }
+        if (supportNoteDisplay) {
+            supportNoteDisplay.textContent = settings.note || 'لا توجد بيانات تواصل إضافية حتى الآن.';
+        }
+
+        if (adminSupportEmailInput) {
+            adminSupportEmailInput.value = settings.email || '';
+        }
+        if (adminSupportNoteInput) {
+            adminSupportNoteInput.value = settings.note || '';
+        }
+
+        supportMethods = Array.isArray(settings.methods) ? settings.methods.slice() : [];
+        renderSupportMethods();
+    }
+
+    function saveSupportSettings(email, note) {
+        const settings = { email, note, methods: supportMethods || [] };
+        try {
+            localStorage.setItem(SUPPORT_SETTINGS_KEY, JSON.stringify(settings));
+        } catch (e) {}
+    }
+
+    if (addSupportMethodBtn && adminSupportMethodInput) {
+        addSupportMethodBtn.addEventListener('click', function () {
+            if (!isCurrentUserAdmin()) {
+                alert('فقط الأدمن يمكنه تعديل إعدادات الدعم الفني.');
+                return;
+            }
+
+            const value = adminSupportMethodInput.value.trim();
+            if (!value) {
+                alert('يرجى كتابة اسم وسيلة التواصل (مثل قناة تيليجرام أو حساب تويتر).');
+                return;
+            }
+
+            if (!supportMethods) supportMethods = [];
+            supportMethods.push(value);
+            adminSupportMethodInput.value = '';
+            renderSupportMethods();
+        });
+    }
+
+    // حفظ إعدادات الدعم الفني من قسم الإدارة
+    if (adminSupportSettingsForm && adminSupportEmailInput && adminSupportNoteInput) {
+        adminSupportSettingsForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!isCurrentUserAdmin()) {
+                alert('فقط الأدمن يمكنه تعديل إعدادات الدعم الفني.');
+                return;
+            }
+
+            const email = adminSupportEmailInput.value.trim();
+            const note = adminSupportNoteInput.value.trim();
+
+            if (!email && !note && (!supportMethods || supportMethods.length === 0)) {
+                const confirmEmpty = confirm('لم تقم بإدخال بريد أو رسالة دعم أو أي وسيلة تواصل أخرى.\nسيتم اعتبار أن بيانات الدعم غير مهيأة.\n\nهل تريد المتابعة؟');
+                if (!confirmEmpty) return;
+            }
+
+            saveSupportSettings(email, note);
+            loadSupportSettings();
+            alert('تم حفظ إعدادات الدعم الفني بنجاح.');
+        });
+    }
+
+    function isCurrentUserAdmin() {
+        return !!(currentUser && currentUser.isAdmin === true);
+    }
+
+    function renderAdminUsers() {
+        if (!adminUsersBody) return;
+        adminUsersBody.innerHTML = '';
+
+        const searchTerm = adminUsersSearchInput ? adminUsersSearchInput.value.trim().toLowerCase() : '';
+
+        const allUsers = Array.isArray(users) ? users : [];
+        const filteredUsers = searchTerm
+            ? allUsers.filter(u => {
+                const name = (u.username || '').toLowerCase();
+                const email = (u.email || '').toLowerCase();
+                return name.includes(searchTerm) || email.includes(searchTerm);
+            })
+            : allUsers;
+
+        const total = allUsers.length;
+        if (adminUsersCountEl) {
+            adminUsersCountEl.textContent = total > 0 ? `عدد المستخدمين: ${total}` : 'لا يوجد مستخدمون بعد';
+        }
+
+        if (filteredUsers.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'admin-user-row';
+            empty.textContent = searchTerm
+                ? 'لا توجد نتائج مطابقة لعملية البحث الحالية.'
+                : 'لا يوجد أي مستخدمين مسجَّلين حالياً.';
+            adminUsersBody.appendChild(empty);
+            return;
+        }
+
+        filteredUsers.forEach(user => {
+            const row = document.createElement('div');
+            row.className = 'admin-user-row';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = user.username || 'بدون اسم';
+
+            const emailSpan = document.createElement('span');
+            emailSpan.textContent = user.email || '—';
+
+            const roleSpan = document.createElement('span');
+            roleSpan.textContent = user.isAdmin ? 'أدمن' : 'مستخدم عادي';
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'admin-user-actions';
+
+            const changePwdBtn = document.createElement('button');
+            changePwdBtn.type = 'button';
+            changePwdBtn.className = 'btn btn-secondary';
+            changePwdBtn.textContent = 'تغيير كلمة المرور';
+
+            changePwdBtn.addEventListener('click', function () {
+                const newPwd = prompt(`اكتب كلمة مرور جديدة للمستخدم:\n${user.username || user.email}`);
+                if (!newPwd) return;
+                const confirmPwd = prompt('أعد إدخال كلمة المرور الجديدة للتأكيد:');
+                if (newPwd !== confirmPwd) {
+                    alert('كلمتا المرور غير متطابقتين. لم يتم التغيير.');
+                    return;
+                }
+
+                const idx = users.findIndex(u => u.id === user.id);
+                if (idx === -1) {
+                    alert('لم يتم العثور على هذا المستخدم في السجل.');
+                    return;
+                }
+                users[idx].password = newPwd;
+                saveUsers();
+                alert('تم تحديث كلمة المرور للمستخدم بنجاح.');
+            });
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn delete-btn';
+            deleteBtn.textContent = 'حذف المستخدم';
+
+            if (user.isAdmin) {
+                deleteBtn.disabled = true;
+                deleteBtn.title = 'لا يمكن حذف حساب الأدمن من قسم الإدارة.';
+            } else {
+                deleteBtn.addEventListener('click', function () {
+                    const confirmDelete = confirm(`سيتم حذف هذا المستخدم نهائياً من النظام:\n${user.username || user.email}\n\nهل أنت متأكد من المتابعة؟`);
+                    if (!confirmDelete) return;
+
+                    const idx = users.findIndex(u => u.id === user.id);
+                    if (idx === -1) {
+                        alert('لم يتم العثور على هذا المستخدم في السجل.');
+                        return;
+                    }
+                    users.splice(idx, 1);
+                    saveUsers();
+                    renderAdminUsers();
+                });
+            }
+
+            actionsDiv.appendChild(changePwdBtn);
+            actionsDiv.appendChild(deleteBtn);
+
+            row.appendChild(nameSpan);
+            row.appendChild(emailSpan);
+            row.appendChild(roleSpan);
+            row.appendChild(actionsDiv);
+
+            adminUsersBody.appendChild(row);
+        });
+    }
+
+    // تصفية المستخدمين أثناء الكتابة في مربع البحث
+    if (adminUsersSearchInput) {
+        adminUsersSearchInput.addEventListener('input', function () {
+            renderAdminUsers();
+        });
+    }
+
+    // إضافة مستخدم جديد من داخل قسم الإدارة (للأدمن فقط)
+    if (adminAddUserForm && adminNewUsernameInput && adminNewEmailInput && adminNewPasswordInput) {
+        adminAddUserForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!isCurrentUserAdmin()) {
+                alert('فقط الأدمن يمكنه إضافة مستخدمين جدد.');
+                return;
+            }
+
+            const username = adminNewUsernameInput.value.trim();
+            const email = adminNewEmailInput.value.trim().toLowerCase();
+            const password = adminNewPasswordInput.value.trim();
+
+            if (!username || !email || !password) {
+                alert('يرجى تعبئة جميع الحقول لإضافة المستخدم.');
+                return;
+            }
+
+            const exists = Array.isArray(users) && users.some(u => u.email === email);
+            if (exists) {
+                alert('يوجد مستخدم مسجّل بهذا البريد الإلكتروني بالفعل.');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now().toString() + Math.random().toString(16).slice(2),
+                username: username,
+                email: email,
+                password: password,
+                isAdmin: false
+            };
+
+            if (!Array.isArray(users)) {
+                users = [];
+            }
+            users.push(newUser);
+            saveUsers();
+
+            adminNewUsernameInput.value = '';
+            adminNewEmailInput.value = '';
+            adminNewPasswordInput.value = '';
+
+            renderAdminUsers();
+            alert('تم إضافة المستخدم الجديد بنجاح. يمكنه الآن تسجيل الدخول من شاشة الدخول.');
+        });
+    }
+
+    // إظهار رابط وقسم الإدارة إذا كان المستخدم الحالي أدمن
+    function applyAdminVisibility() {
+        if (!adminNav || !adminSection) return;
+
+        if (isCurrentUserAdmin()) {
+            adminNav.style.display = '';
+        } else {
+            adminNav.style.display = 'none';
+            adminSection.style.display = 'none';
+        }
+    }
+
+    if (adminNav && adminSection) {
+        adminNav.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!isCurrentUserAdmin()) {
+                alert('هذا القسم متاح لحساب الأدمن فقط.');
+                return;
+            }
+            adminSection.style.display = 'block';
+            renderAdminUsers();
+            adminSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    // إخفاء قسم الإدارة عند الضغط على أي عنصر آخر في القائمة الجانبية
+    const sidebarNavLinks = document.querySelectorAll('.sidebar nav a');
+    if (sidebarNavLinks && adminSection) {
+        sidebarNavLinks.forEach(link => {
+            // نتجاهل رابط الإدارة نفسه
+            if (link.id === 'adminNav') return;
+
+            link.addEventListener('click', function () {
+                adminSection.style.display = 'none';
+            });
+        });
+    }
+
+    // تمرير الصفحة إلى قسم الدعم الفني عند الضغط على رابط الدعم
+    if (supportNav && supportSection) {
+        supportNav.addEventListener('click', function (e) {
+            e.preventDefault();
+            supportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
     // وظيفة لتحديث المحتوى الرئيسي
     function updateMainContent(appName) {
         const welcomeTitle = document.querySelector('.welcome-banner h2');
@@ -213,24 +722,205 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('سيتم عرض الإشعارات هنا');
     });
 
-    // التعامل مع زر الملف الشخصي
+    // عناصر نافذة إعدادات الملف الشخصي
     const profileBtn = document.querySelector('.profile-btn');
-    profileBtn.addEventListener('click', function() {
-        alert('سيتم عرض إعدادات الملف الشخصي هنا');
-    });
+    const profileModal = document.getElementById('profileModal');
+    const profileCloseBtn = document.getElementById('profileCloseBtn');
+    const profileForm = document.getElementById('profileForm');
+    const profileUsernameInput = document.getElementById('profileUsernameInput');
+    const profileEmailInput = document.getElementById('profileEmailInput');
+    const profileCurrentPasswordInput = document.getElementById('profileCurrentPassword');
+    const profileNewPasswordInput = document.getElementById('profileNewPassword');
+    const profileConfirmNewPasswordInput = document.getElementById('profileConfirmNewPassword');
+    const profileDeleteBtn = document.getElementById('profileDeleteBtn');
 
-    // رقم سري لحذف التطبيقات في وضع إدارة التنزيلات (قابل للتغيير) مع تخزينه في localStorage
-    const DELETE_PASSWORD_KEY = 'dashboard_delete_password';
-    let deletePassword = '1234';
+    // فتح نافذة إعدادات الملف الشخصي
+    if (profileBtn && profileModal) {
+        profileBtn.addEventListener('click', function() {
+            if (!currentUser || !currentUser.email) {
+                alert('لا يوجد مستخدم مسجّل حالياً. يرجى تسجيل الدخول أولاً.');
+                return;
+            }
 
-    try {
-        const storedPwd = localStorage.getItem(DELETE_PASSWORD_KEY);
-        if (storedPwd) {
-            deletePassword = storedPwd;
-        }
-    } catch (e) {
-        // إذا حدث خطأ في قراءة localStorage نستخدم القيمة الافتراضية
-        deletePassword = '1234';
+            if (profileUsernameInput) {
+                profileUsernameInput.value = currentUser.username || '';
+                // المستخدم العادي لا يستطيع تعديل الاسم
+                profileUsernameInput.readOnly = !isCurrentUserAdmin();
+            }
+            if (profileEmailInput) {
+                profileEmailInput.value = currentUser.email || '';
+                // المستخدم العادي لا يستطيع تعديل البريد
+                profileEmailInput.readOnly = !isCurrentUserAdmin();
+            }
+            if (profileCurrentPasswordInput) {
+                profileCurrentPasswordInput.value = '';
+            }
+            if (profileNewPasswordInput) {
+                profileNewPasswordInput.value = '';
+            }
+            if (profileConfirmNewPasswordInput) {
+                profileConfirmNewPasswordInput.value = '';
+            }
+
+            // لا نسمح بحذف الحساب من هذه النافذة، لذلك نخفي زر الحذف إن وجد
+            if (profileDeleteBtn) {
+                profileDeleteBtn.style.display = 'none';
+            }
+
+            profileModal.style.display = 'flex';
+        });
+    }
+
+    // حفظ التغييرات في إعدادات الحساب
+    if (profileForm && profileUsernameInput && profileEmailInput && profileCurrentPasswordInput) {
+        profileForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!currentUser || !currentUser.id) {
+                alert('لا يوجد حساب مرتبط حالياً. يرجى تسجيل الدخول من جديد.');
+                return;
+            }
+
+            const newUsername = profileUsernameInput.value.trim();
+            const newEmail = profileEmailInput.value.trim().toLowerCase();
+            const currentPassword = profileCurrentPasswordInput ? profileCurrentPasswordInput.value : '';
+            const newPassword = profileNewPasswordInput ? profileNewPasswordInput.value : '';
+            const confirmNewPassword = profileConfirmNewPasswordInput ? profileConfirmNewPasswordInput.value : '';
+
+            if (!currentPassword) {
+                alert('يرجى إدخال كلمة المرور الحالية لحفظ التغييرات.');
+                return;
+            }
+
+            const index = users.findIndex(u => u.id === currentUser.id);
+            if (index === -1) {
+                alert('لم يتم العثور على هذا الحساب في السجل.');
+                return;
+            }
+
+            if (users[index].password !== currentPassword) {
+                alert('كلمة المرور الحالية غير صحيحة.');
+                return;
+            }
+
+            // منطق خاص بالمستخدم العادي: يمكنه فقط تغيير كلمة المرور
+            if (!isCurrentUserAdmin()) {
+                if (!newPassword && !confirmNewPassword) {
+                    alert('لا يوجد تغيير في كلمة المرور.');
+                    return;
+                }
+
+                if (!newPassword || !confirmNewPassword) {
+                    alert('يرجى إدخال كلمة المرور الجديدة وتأكيدها معاً.');
+                    return;
+                }
+
+                if (newPassword !== confirmNewPassword) {
+                    alert('كلمة المرور الجديدة وتأكيدها غير متطابقتين.');
+                    return;
+                }
+
+                users[index].password = newPassword;
+                saveUsers();
+
+                alert('تم تحديث كلمة المرور بنجاح.');
+                if (profileModal) {
+                    profileModal.style.display = 'none';
+                }
+                return;
+            }
+
+            // منطق الأدمن: يمكنه تعديل الاسم والبريد وكلمة المرور
+            if (!newUsername || !newEmail) {
+                alert('الاسم والبريد الإلكتروني مطلوبان.');
+                return;
+            }
+
+            // التحقق من عدم وجود حساب آخر بنفس البريد
+            const duplicate = users.some(u => u.email === newEmail && u.id !== currentUser.id);
+            if (duplicate) {
+                alert('يوجد حساب آخر مسجّل بهذا البريد الإلكتروني.');
+                return;
+            }
+
+            if (newPassword || confirmNewPassword) {
+                if (!newPassword || !confirmNewPassword) {
+                    alert('يرجى إدخال كلمة المرور الجديدة وتأكيدها معاً أو تركهما فارغين.');
+                    return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                    alert('كلمة المرور الجديدة وتأكيدها غير متطابقتين.');
+                    return;
+                }
+            }
+
+            users[index].username = newUsername;
+            users[index].email = newEmail;
+            if (newPassword) {
+                users[index].password = newPassword;
+            }
+
+            saveUsers();
+
+            currentUser.username = newUsername;
+            currentUser.email = newEmail;
+            try {
+                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+            } catch (e) {}
+
+            alert('تم حفظ التغييرات بنجاح.');
+            if (profileModal) {
+                profileModal.style.display = 'none';
+            }
+        });
+    }
+
+    // تم إلغاء خيار حذف الحساب من نافذة إعدادات الملف الشخصي؛
+    // الحذف يتم فقط من قسم "إدارة المستخدمين" بواسطة الأدمن.
+
+    // إغلاق نافذة إعدادات الملف الشخصي
+    if (profileCloseBtn && profileModal) {
+        profileCloseBtn.addEventListener('click', function () {
+            profileModal.style.display = 'none';
+        });
+    }
+
+    // إغلاق عند الضغط خارج الصندوق
+    if (profileModal) {
+        profileModal.addEventListener('click', function (e) {
+            if (e.target === profileModal) {
+                profileModal.style.display = 'none';
+            }
+        });
+    }
+
+    // زر تسجيل الخروج
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            // مسح المستخدم الحالي من الذاكرة والتخزين المحلي
+            currentUser = null;
+            try {
+                localStorage.removeItem('dashboard_current_user');
+            } catch (e) {}
+
+            // إعادة إظهار طبقة تسجيل الدخول إذا كان هناك مستخدمون مسجلون
+            if (typeof applyAuthGuard === 'function') {
+                applyAuthGuard();
+            } else {
+                const overlay = document.getElementById('authOverlay');
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                }
+            }
+
+            alert('تم تسجيل الخروج بنجاح.');
+        });
+    }
+
+    // تحميل إعدادات الدعم الفني المخزَّنة عند فتح الصفحة
+    if (typeof loadSupportSettings === 'function') {
+        loadSupportSettings();
     }
 
     // تفعيل وضع إدارة التنزيلات من القائمة الجانبية
@@ -239,62 +929,6 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadsNav.addEventListener('click', function(e) {
             e.preventDefault();
             document.body.classList.toggle('manage-mode');
-        });
-    }
-
-    // نموذج تغيير الرقم السري لحذف التطبيقات
-    const changeDeletePasswordForm = document.getElementById('changeDeletePasswordForm');
-    const oldDeletePasswordInput = document.getElementById('oldDeletePassword');
-    const newDeletePasswordInput = document.getElementById('newDeletePassword');
-
-    if (changeDeletePasswordForm && oldDeletePasswordInput && newDeletePasswordInput) {
-        changeDeletePasswordForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const oldPwd = oldDeletePasswordInput.value;
-            const newPwd = newDeletePasswordInput.value;
-
-            if (!oldPwd || !newPwd) {
-                alert('يرجى إدخال الرقم السري الحالي والجديد.');
-                return;
-            }
-
-            if (oldPwd !== deletePassword) {
-                alert('الرقم السري الحالي غير صحيح. لم يتم التغيير.');
-                return;
-            }
-
-            deletePassword = newPwd;
-            try {
-                localStorage.setItem(DELETE_PASSWORD_KEY, deletePassword);
-            } catch (e) {}
-            oldDeletePasswordInput.value = '';
-            newDeletePasswordInput.value = '';
-            alert('تم تحديث الرقم السري لحذف التطبيقات بنجاح.');
-        });
-    }
-
-    // زر إعادة تعيين الرقم السري في حال نسيانه
-    const resetDeletePasswordBtn = document.getElementById('resetDeletePasswordBtn');
-    if (resetDeletePasswordBtn) {
-        resetDeletePasswordBtn.addEventListener('click', function () {
-            const newPwd = prompt('لقد نسيت الرقم السري الحالي.\n\nاكتب كلمة أو أرقام جديدة لتكون الرقم السري الجديد للحذف:');
-            if (!newPwd) {
-                alert('لم يتم إدخال رقم سري جديد. لم يتم التغيير.');
-                return;
-            }
-
-            const confirmReset = confirm(`سيتم تعيين الرقم السري الجديد للحذف إلى:\n\n${newPwd}\n\nهل أنت متأكد من المتابعة؟`);
-            if (!confirmReset) {
-                return;
-            }
-
-            deletePassword = newPwd;
-            try {
-                localStorage.setItem(DELETE_PASSWORD_KEY, deletePassword);
-            } catch (e) {}
-
-            alert('تمت إعادة تعيين الرقم السري للحذف بنجاح.');
         });
     }
 
@@ -335,23 +969,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // دالة لإضافة منطق الحذف مع الرقم السري لبطاقة واحدة
+    // دالة لإضافة منطق الحذف لبطاقة واحدة (مع تأكيد فقط)
     function attachDeleteHandler(card) {
         const deleteBtn = card.querySelector('.delete-btn');
         if (!deleteBtn) return;
 
         deleteBtn.addEventListener('click', function () {
-            const entered = prompt('أدخل الرقم السري لحذف هذا التطبيق:');
-            if (entered !== deletePassword) {
-                alert('الرقم السري غير صحيح. لم يتم الحذف.');
-                return;
-            }
-
             const confirmDelete = confirm('هل أنت متأكد من حذف هذا التطبيق؟ لا يمكن التراجع.');
             if (!confirmDelete) return;
 
             const appId = card.dataset.appId;
-            if (appId) {
+            const favoriteId = card.dataset.favoriteId;
+            if (favoriteId) {
+                // حذف من قسم المفضلة فقط
+                favoriteApps = favoriteApps.filter(app => app.id !== favoriteId);
+                saveFavoriteApps();
+            } else if (appId) {
                 // بطاقات مضافة ديناميكياً (ويب أو أندرويد أو سوشيال)
                 const inWeb = card.closest('#webAppsGrid') !== null;
                 const inApk = card.closest('#apkAppsGrid') !== null;
@@ -609,6 +1242,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let webApps = [];
     let apkApps = [];
     let socialApps = [];
+    let favoriteApps = [];
+    let users = [];
+    let currentUser = null;
     // قائمة مفاتيح البطاقات الثابتة المحذوفة (اسم + رابط)
     let deletedStaticCardKeys = [];
 
@@ -616,6 +1252,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const WEB_APPS_KEY = 'dashboard_web_apps';
     const APK_APPS_KEY = 'dashboard_apk_apps';
     const SOCIAL_APPS_KEY = 'dashboard_social_apps';
+    const FAVORITES_KEY = 'dashboard_favorite_apps';
+    const USERS_KEY = 'dashboard_users';
+    const CURRENT_USER_KEY = 'dashboard_current_user';
     const DELETED_STATIC_KEY = 'dashboard_deleted_static_cards';
 
     function saveWebApps() {
@@ -634,15 +1273,25 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem(DELETED_STATIC_KEY, JSON.stringify(deletedStaticCardKeys));
     }
 
+    function saveFavoriteApps() {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoriteApps));
+    }
+
+    function saveUsers() {
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
     // دالة لتحديث عدد التطبيقات في كل قسم
     function updateSectionCounts() {
         const webGrid = document.getElementById('webAppsGrid');
         const apkGrid = document.getElementById('apkAppsGrid');
         const socialGrid = document.getElementById('socialAppsGrid');
+        const favoriteGrid = document.getElementById('favoriteAppsGrid');
 
         const webCountEl = document.getElementById('webAppsCount');
         const apkCountEl = document.getElementById('apkAppsCount');
         const socialCountEl = document.getElementById('socialAppsCount');
+        const favoriteCountEl = document.getElementById('favoriteAppsCount');
 
         const webCount = webGrid
             ? Array.from(webGrid.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none').length
@@ -653,10 +1302,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const socialCount = socialGrid
             ? Array.from(socialGrid.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none').length
             : 0;
+        const favoriteCount = favoriteGrid
+            ? Array.from(favoriteGrid.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none').length
+            : 0;
 
         if (webCountEl) webCountEl.textContent = `(${webCount})`;
         if (apkCountEl) apkCountEl.textContent = `(${apkCount})`;
         if (socialCountEl) socialCountEl.textContent = `(${socialCount})`;
+        if (favoriteCountEl) favoriteCountEl.textContent = `(${favoriteCount})`;
     }
 
     // دالة عامة للبحث عن رابط في جميع الأقسام
@@ -713,6 +1366,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="app-actions">
                     <a href="${app.url}" class="btn btn-primary" target="_blank">زيارة الموقع</a>
                     <a href="${app.url}" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                    <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                    <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                     <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                     <button type="button" class="btn delete-btn">حذف التطبيق</button>
                 </div>
@@ -733,6 +1388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             attachCardHover(card);
             attachDeleteHandler(card);
             attachEditHandler(card);
+            attachFavoriteHandler(card, 'من قسم تطبيقات الويب');
         }
     }
 
@@ -807,6 +1463,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="app-actions">
                     <a href="${app.url}" class="btn btn-primary" target="_blank">تحميل APK</a>
                     <a href="${app.url}" class="btn btn-secondary" target="_blank">فتح الرابط</a>
+                    <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                    <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                     <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                     <button type="button" class="btn delete-btn">حذف التطبيق</button>
                 </div>
@@ -827,6 +1485,7 @@ document.addEventListener('DOMContentLoaded', function() {
             attachCardHover(card);
             attachDeleteHandler(card);
             attachEditHandler(card);
+            attachFavoriteHandler(card, 'من قسم تطبيقات السوشيال ميديا');
         }
     }
 
@@ -846,6 +1505,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="app-actions">
                     <a href="${app.url}" class="btn btn-primary" target="_blank">زيارة / فتح الحساب</a>
                     <a href="${app.url}" class="btn btn-secondary" target="_blank">فتح في تبويب جديد</a>
+                    <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                    <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                     <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                     <button type="button" class="btn delete-btn">حذف التطبيق</button>
                 </div>
@@ -866,6 +1527,104 @@ document.addEventListener('DOMContentLoaded', function() {
             attachCardHover(card);
             attachDeleteHandler(card);
             attachEditHandler(card);
+        }
+    }
+
+    // الانتقال من بطاقة المفضلة إلى البطاقة الأصلية في القسم المناسب مع وميض
+    function attachFavoriteOriginHandler(favCard) {
+        const goBtn = favCard.querySelector('[data-go-original-btn]');
+        if (!goBtn) return;
+
+        goBtn.addEventListener('click', function () {
+            const titleEl = favCard.querySelector('.app-info h3');
+            const primaryLink = favCard.querySelector('.app-actions a.btn-primary');
+            const name = titleEl ? titleEl.textContent.trim() : '';
+            const url = primaryLink ? primaryLink.getAttribute('href') : '';
+
+            if (!name || !url) return;
+
+            const grids = [
+                { selector: '#webAppsGrid', tabId: 'webAppsTab' },
+                { selector: '#apkAppsGrid', tabId: 'apkAppsTab' },
+                { selector: '#socialAppsGrid', tabId: 'socialAppsTab' }
+            ];
+
+            let foundCard = null;
+            let targetGridSelector = null;
+
+            for (const g of grids) {
+                const grid = document.querySelector(g.selector);
+                if (!grid) continue;
+
+                const cards = grid.querySelectorAll('.app-card');
+                for (const card of cards) {
+                    const cTitleEl = card.querySelector('.app-info h3');
+                    const cPrimaryLink = card.querySelector('.app-actions a.btn-primary');
+                    const cName = cTitleEl ? cTitleEl.textContent.trim() : '';
+                    const cUrl = cPrimaryLink ? cPrimaryLink.getAttribute('href') : '';
+
+                    if (cName === name && cUrl === url) {
+                        foundCard = card;
+                        targetGridSelector = g.selector;
+                        break;
+                    }
+                }
+
+                if (foundCard) break;
+            }
+
+            if (!foundCard || !targetGridSelector) {
+                alert('لم يتم العثور على البطاقة الأصلية في الأقسام الأخرى. قد تكون محذوفة.');
+                return;
+            }
+
+            // تفعيل التبويب المناسب أولاً
+            activateTabForGrid(targetGridSelector);
+
+            // تمرير إلى البطاقة وإضافة تأثير الوميض
+            foundCard.classList.add('card-highlight');
+            foundCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                foundCard.classList.remove('card-highlight');
+            }, 2000);
+        });
+    }
+
+    function createFavoriteCardFromData(app) {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+        card.dataset.favoriteId = app.id;
+        card.innerHTML = `
+            <img src="${app.imageSrc || 'https://picsum.photos/300/213'}" alt="${app.name}">
+            <div class="app-info">
+                <h3>${app.name}</h3>
+                ${app.desc ? `<p class="app-description">${app.desc}</p>` : ''}
+                <div class="app-meta">
+                    <span>${app.sourceLabel || 'تطبيق مفضل'}</span>
+                    <span class="status ${app.statusClass}">${app.statusText}</span>
+                </div>
+                <div class="app-actions">
+                    <a href="${app.url}" class="btn btn-primary" target="_blank">فتح التطبيق</a>
+                    <a href="${app.url}" class="btn btn-secondary" target="_blank">فتح في تبويب جديد</a>
+                    <button type="button" class="btn" data-go-original-btn>الذهاب إلى البطاقة الأصلية</button>
+                    <button type="button" class="btn delete-btn">إزالة من المفضلة</button>
+                </div>
+            </div>
+        `;
+
+        const favoriteGrid = document.getElementById('favoriteAppsGrid');
+        if (favoriteGrid) {
+            if (app.statusClass === 'stopped') {
+                card.classList.add('card-disabled');
+            }
+            if (favoriteGrid.firstChild) {
+                favoriteGrid.insertBefore(card, favoriteGrid.firstChild);
+            } else {
+                favoriteGrid.appendChild(card);
+            }
+            attachCardHover(card);
+            attachDeleteHandler(card);
+            attachFavoriteOriginHandler(card);
         }
     }
 
@@ -909,7 +1668,53 @@ document.addEventListener('DOMContentLoaded', function() {
         deletedStaticCardKeys = [];
     }
 
-    // تطبيق تأثير التحويم ومنطق الحذف/التعديل على البطاقات الثابتة الموجودة في HTML فقط
+    try {
+        const storedFavorites = localStorage.getItem(FAVORITES_KEY);
+        if (storedFavorites) {
+            favoriteApps = JSON.parse(storedFavorites);
+            favoriteApps.forEach(app => createFavoriteCardFromData(app));
+        }
+    } catch (e) {
+        favoriteApps = [];
+    }
+
+    try {
+        const storedUsers = localStorage.getItem(USERS_KEY);
+        if (storedUsers) {
+            users = JSON.parse(storedUsers);
+        }
+    } catch (e) {
+        users = [];
+    }
+
+    // ضمان وجود حقل isAdmin وتعيين الأدمن الأول إذا لم يكن موجوداً
+    if (Array.isArray(users) && users.length > 0) {
+        let hasAdmin = users.some(u => u && u.isAdmin === true);
+        if (!hasAdmin) {
+            // اجعل أول مستخدم في القائمة هو الأدمن
+            users[0].isAdmin = true;
+            try {
+                saveUsers();
+            } catch (e) {}
+        }
+    }
+
+    // قراءة المستخدم الحالي إن وُجد
+    try {
+        const storedCurrent = localStorage.getItem(CURRENT_USER_KEY);
+        if (storedCurrent) {
+            currentUser = JSON.parse(storedCurrent);
+        }
+    } catch (e) {
+        currentUser = null;
+    }
+
+    // بعد تحميل المستخدم الحالي من التخزين، نطبّق ظهور قسم الإدارة
+    if (typeof applyAdminVisibility === 'function') {
+        applyAdminVisibility();
+    }
+
+    // تطبيق تأثير التحويم ومنطق الحذف/التعديل/المفضلة على البطاقات الثابتة الموجودة في HTML فقط
     const appCards = document.querySelectorAll('.app-card');
     appCards.forEach(card => {
         // لا نعيد ربط البطاقات التي تم إنشاؤها من localStorage (لديها appId) لأننا ربطناها بالفعل
@@ -929,6 +1734,17 @@ document.addEventListener('DOMContentLoaded', function() {
         attachCardHover(card);
         attachDeleteHandler(card);
         attachEditHandler(card);
+
+        // تحديد النص المناسب للمصدر حسب القسم
+        let sourceLabel = '';
+        if (card.closest('#webAppsGrid')) {
+            sourceLabel = 'من قسم تطبيقات الويب';
+        } else if (card.closest('#apkAppsGrid')) {
+            sourceLabel = 'من قسم تطبيقات الأندرويد';
+        } else if (card.closest('#socialAppsGrid')) {
+            sourceLabel = 'من قسم تطبيقات السوشيال ميديا';
+        }
+        attachFavoriteHandler(card, sourceLabel);
     });
 
     // بعد تحميل كل البيانات ومعالجة البطاقات الثابتة المحذوفة، نحدّث عداد التطبيقات لكل قسم
@@ -1077,6 +1893,168 @@ document.addEventListener('DOMContentLoaded', function() {
             if (appApkStatusSelect) appApkStatusSelect.value = 'ready';
         });
     }
+
+    // التعامل مع نموذج إنشاء حساب جديد
+    const signupForm = document.getElementById('signupForm');
+    const signupUsername = document.getElementById('signupUsername');
+    const signupEmail = document.getElementById('signupEmail');
+    const signupPassword = document.getElementById('signupPassword');
+    const signupConfirmPassword = document.getElementById('signupConfirmPassword');
+
+    if (signupForm && signupUsername && signupEmail && signupPassword && signupConfirmPassword) {
+        signupForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const username = signupUsername.value.trim();
+            const email = signupEmail.value.trim().toLowerCase();
+            const password = signupPassword.value.trim();
+            const confirmPassword = signupConfirmPassword.value.trim();
+
+            if (!username || !email || !password || !confirmPassword) {
+                alert('يرجى تعبئة جميع الحقول.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('كلمتا المرور غير متطابقتين.');
+                return;
+            }
+
+            const exists = users.some(user => user.email === email);
+            if (exists) {
+                alert('يوجد حساب مسجّل بهذا البريد الإلكتروني بالفعل.');
+                return;
+            }
+
+            const userData = {
+                id: Date.now().toString() + Math.random().toString(16).slice(2),
+                username,
+                email,
+                password,
+                // أول مستخدم يتم إنشاؤه يصبح أدمن تلقائياً
+                isAdmin: users.length === 0
+            };
+
+            users.push(userData);
+            saveUsers();
+
+            signupUsername.value = '';
+            signupEmail.value = '';
+            signupPassword.value = '';
+            signupConfirmPassword.value = '';
+
+            alert('تم إنشاء الحساب بنجاح. يمكنك استخدام هذه البيانات في شاشة تسجيل الدخول.');
+        });
+    }
+
+    // منطق تسجيل الدخول / إنشاء الحساب وحماية اللوحة
+    const authOverlay = document.getElementById('authOverlay');
+    const authTitle = document.getElementById('authTitle');
+    const authSubtitle = document.getElementById('authSubtitle');
+    const loginForm = document.getElementById('loginForm');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginError = document.getElementById('loginError');
+    const goToSignupBtn = document.getElementById('goToSignupBtn');
+    const goToLoginBtn = document.getElementById('goToLoginBtn');
+
+    function showLoginView() {
+        if (!authOverlay) return;
+        if (authTitle) authTitle.textContent = 'تسجيل الدخول';
+        if (authSubtitle) authSubtitle.textContent = 'قم بتسجيل الدخول للوصول إلى لوحة التحكم';
+        if (loginForm) loginForm.style.display = 'flex';
+        if (signupForm) signupForm.style.display = 'none';
+    }
+
+    function showSignupView() {
+        if (!authOverlay) return;
+        if (authTitle) authTitle.textContent = 'إنشاء حساب جديد';
+        if (authSubtitle) authSubtitle.textContent = 'قم بإنشاء حساب جديد لاستخدام لوحة التحكم';
+        if (loginForm) loginForm.style.display = 'none';
+        if (signupForm) signupForm.style.display = 'flex';
+    }
+
+    if (goToSignupBtn) {
+        goToSignupBtn.addEventListener('click', function () {
+            showSignupView();
+        });
+    }
+
+    if (goToLoginBtn) {
+        goToLoginBtn.addEventListener('click', function () {
+            showLoginView();
+        });
+    }
+
+    function applyAuthGuard() {
+        if (!authOverlay || !loginForm) return;
+
+        // إذا لم يكن هناك أي مستخدمين مسجلين، نظهر طبقة المصادقة مع نموذج إنشاء الحساب
+        if (!users || users.length === 0) {
+            authOverlay.style.display = 'flex';
+            showSignupView();
+            return;
+        }
+
+        if (currentUser && currentUser.email) {
+            authOverlay.style.display = 'none';
+        } else {
+            authOverlay.style.display = 'flex';
+            showLoginView();
+        }
+    }
+
+    if (loginForm && loginEmail && loginPassword) {
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const email = loginEmail.value.trim().toLowerCase();
+            const password = loginPassword.value.trim();
+
+            if (!email || !password) {
+                if (loginError) {
+                    loginError.textContent = 'يرجى إدخال البريد الإلكتروني وكلمة المرور.';
+                    loginError.style.display = 'block';
+                }
+                return;
+            }
+
+            const user = users.find(u => u.email === email && u.password === password);
+            if (!user) {
+                // تنبيه تشخيصي مؤقت لمعرفة ما هو المخزن فعلياً وما الذي أدخلته
+                try {
+                    alert('تشخيص تسجيل الدخول:\n\nالمستخدمون المخزّنون:\n' + JSON.stringify(users, null, 2) + '\n\nالبريد المدخل: ' + email + '\nكلمة المرور المدخلة: ' + password);
+                } catch (e) {}
+
+                if (loginError) {
+                    loginError.textContent = 'بيانات الدخول غير صحيحة.';
+                    loginError.style.display = 'block';
+                } else {
+                    alert('بيانات الدخول غير صحيحة.');
+                }
+                return;
+            }
+
+            currentUser = { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin === true };
+            try {
+                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+            } catch (e) {}
+
+            if (loginError) loginError.style.display = 'none';
+            loginPassword.value = '';
+
+            if (authOverlay) authOverlay.style.display = 'none';
+
+            // بعد تسجيل الدخول الناجح، نحدّث ظهور قسم الإدارة حسب صلاحيات الحساب
+            if (typeof applyAdminVisibility === 'function') {
+                applyAdminVisibility();
+            }
+            alert(`مرحباً ${user.username}، تم تسجيل الدخول بنجاح.`);
+        });
+    }
+
+    // تطبيق حماية الدخول بعد تحميل المستخدمين
+    applyAuthGuard();
 
     // تحديث الإحصائيات بشكل دوري حتى لو كانت القيم نصوصاً غير رقمية في البداية
     setInterval(function() {

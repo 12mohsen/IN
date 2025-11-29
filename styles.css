@@ -12,6 +12,150 @@ body {
     direction: rtl;
 }
 
+/* طبقة تسجيل الدخول */
+.auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(2,6,23,0.98));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.auth-box {
+    background-color: #020617;
+    border: 1px solid #111827;
+    border-radius: 12px;
+    padding: 24px 20px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.auth-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.auth-subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    font-size: 0.875rem;
+    background-color: #020617;
+    color: #e5e7eb;
+}
+
+.auth-submit {
+    width: 100%;
+    margin-top: 6px;
+}
+
+.auth-error {
+    font-size: 0.8rem;
+    color: #fecaca;
+    background-color: #7f1d1d;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.auth-hint {
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    text-align: center;
+}
+
+/* نافذة إعدادات الملف الشخصي */
+.profile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2100;
+}
+
+.profile-box {
+    background-color: #020617;
+    border: 1px solid #111827;
+    border-radius: 12px;
+    padding: 20px 18px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.profile-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.profile-subtitle {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.profile-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 0;
+    font-size: 0.9rem;
+}
+
+.profile-label {
+    color: #9ca3af;
+}
+
+.profile-value {
+    color: #e5e7eb;
+}
+
+.profile-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.profile-input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    font-size: 0.875rem;
+    background-color: #020617;
+    color: #e5e7eb;
+}
+
 .footer {
     margin-top: 24px;
     padding: 16px 24px;
@@ -503,7 +647,13 @@ body.manage-mode .password-form {
     color: #f9fafb;
 }
 
+/* زر حذف التطبيقات لا يظهر إلا في وضع إدارة التنزيلات */
 body.manage-mode .delete-btn {
+    display: inline-block;
+}
+
+/* زر حذف المستخدمين في قسم الإدارة يظهر دائماً */
+.admin-user-actions .delete-btn {
     display: inline-block;
 }
 
@@ -541,6 +691,47 @@ body.manage-mode .delete-btn {
 /* قسم التطبيقات والتبويبات */
 .apps-section {
     margin-top: 24px;
+}
+
+/* قسم إدارة المستخدمين (الأدمن) */
+.admin-users-table {
+    background-color: #020617;
+    border: 1px solid #111827;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 8px;
+    font-size: 0.875rem;
+}
+
+.admin-users-header,
+.admin-user-row {
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 0.8fr 1.4fr;
+    gap: 8px;
+    padding: 6px 0;
+    align-items: center;
+}
+
+.admin-users-header {
+    border-bottom: 1px solid #1f2937;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.admin-user-row {
+    border-bottom: 1px solid #111827;
+}
+
+/* جعل صفوف المستخدمين قابلة للتمرير عند كثرة المستخدمين */
+.admin-users-body {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.admin-user-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
 }
 
 .tabs-header {

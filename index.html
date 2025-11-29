@@ -11,6 +11,98 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- طبقة تسجيل الدخول / إنشاء الحساب -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <h2 id="authTitle" class="auth-title">تسجيل الدخول</h2>
+            <p id="authSubtitle" class="auth-subtitle">قم بتسجيل الدخول للوصول إلى لوحة التحكم</p>
+
+            <!-- نموذج تسجيل الدخول -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginEmail">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" placeholder="البريد المستخدم عند إنشاء الحساب" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">كلمة المرور</label>
+                    <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
+                </div>
+                <div id="loginError" class="auth-error" style="display:none;">بيانات الدخول غير صحيحة.</div>
+                <button type="submit" class="btn btn-primary auth-submit">تسجيل الدخول</button>
+                <p class="auth-hint">
+                    لا تملك حساباً؟
+                    <button type="button" id="goToSignupBtn" class="btn btn-secondary" style="margin-top:8px;width:100%;">إنشاء حساب جديد</button>
+                </p>
+            </form>
+
+            <!-- نموذج إنشاء حساب جديد (من خارج التطبيق) -->
+            <form id="signupForm" class="auth-form" style="display:none;">
+                <div class="form-group">
+                    <label for="signupUsername">اسم المستخدم</label>
+                    <input type="text" id="signupUsername" placeholder="اكتب اسم المستخدم" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">البريد الإلكتروني</label>
+                    <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">كلمة المرور</label>
+                    <input type="password" id="signupPassword" placeholder="اختر كلمة مرور" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">تأكيد كلمة المرور</label>
+                    <input type="password" id="signupConfirmPassword" placeholder="أعد إدخال كلمة المرور" required>
+                </div>
+                <button type="submit" class="btn btn-primary auth-submit">إنشاء الحساب</button>
+                <p class="auth-hint">
+                    لديك حساب بالفعل؟
+                    <button type="button" id="goToLoginBtn" class="btn btn-secondary" style="margin-top:8px;width:100%;">العودة لتسجيل الدخول</button>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة إعدادات الملف الشخصي -->
+    <div id="profileModal" class="profile-overlay" style="display: none;">
+        <div class="profile-box">
+            <h2 class="profile-title">إعدادات الحساب</h2>
+            <p class="profile-subtitle">يمكنك تعديل بيانات حسابك أو حذف الحساب نهائياً.</p>
+            <form id="profileForm" class="profile-form">
+                <div class="profile-row">
+                    <label class="profile-label" for="profileUsernameInput">اسم المستخدم</label>
+                    <input id="profileUsernameInput" type="text" class="profile-input" required>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="profileEmailInput">البريد الإلكتروني</label>
+                    <input id="profileEmailInput" type="email" class="profile-input" required>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="profileCurrentPassword">كلمة المرور الحالية</label>
+                    <input id="profileCurrentPassword" type="password" class="profile-input" placeholder="مطلوبة لحفظ التغييرات" required>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="profileNewPassword">كلمة مرور جديدة (اختياري)</label>
+                    <input id="profileNewPassword" type="password" class="profile-input" placeholder="اتركها فارغة إذا لا تريد تغييرها">
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="profileConfirmNewPassword">تأكيد كلمة المرور الجديدة</label>
+                    <input id="profileConfirmNewPassword" type="password" class="profile-input" placeholder="أعد إدخال كلمة المرور الجديدة">
+                </div>
+                <div class="profile-actions">
+                    <button type="button" id="profileDeleteBtn" class="btn" style="background-color:#dc2626;border-color:#b91c1c;color:#f9fafb;">
+                        حذف الحساب
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        حفظ التغييرات
+                    </button>
+                    <button type="button" id="profileCloseBtn" class="btn btn-secondary">
+                        إغلاق
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- شريط التنقل العلوي -->
     <header class="header">
         <div class="header-right">
@@ -32,6 +124,9 @@
             <button class="profile-btn">
                 <i class="fas fa-user"></i>
                 <span>الملف الشخصي</span>
+            </button>
+            <button id="logoutBtn" class="btn" type="button" style="margin-right: 8px;">
+                تسجيل خروج
             </button>
         </div>
     </header>
@@ -99,8 +194,9 @@
                 <a href="#" class="active"><i class="fas fa-home"></i> الرئيسية</a>
                 <a href="#"><i class="fas fa-chart-bar"></i> الإحصائيات</a>
                 <a href="#" id="downloadsNav"><i class="fas fa-download"></i> إدارة التنزيلات</a>
-                <a href="#"><i class="fas fa-headset"></i> الدعم الفني</a>
+                <a href="#" id="supportNav"><i class="fas fa-headset"></i> الدعم الفني</a>
                 <a href="#"><i class="fas fa-file-alt"></i> التقارير والتحليل</a>
+                <a href="#" id="adminNav" style="display:none;"><i class="fas fa-user-shield"></i> الإدارة</a>
             </nav>
         </aside>
 
@@ -146,26 +242,102 @@
                 </div>
             </div>
 
-            <!-- قسم التطبيقات مع تبويبات -->
-            <div class="apps-section">
-                <!-- نموذج تغيير الرقم السري لحذف التطبيقات -->
-                <form id="changeDeletePasswordForm" class="add-app-form password-form">
+            <!-- قسم إدارة المستخدمين (يظهر للأدمن فقط) -->
+            <div id="adminSection" class="apps-section" style="display:none;">
+                <h2 class="section-title">
+                    إدارة المستخدمين
+                    <span id="adminUsersCount" class="section-app-count"></span>
+                </h2>
+                <!-- مربع بحث عن المستخدمين -->
+                <div class="add-app-form" style="margin-bottom: 12px; padding: 8px 12px;">
+                    <div class="form-group" style="flex:1 1 auto;">
+                        <label for="adminUsersSearch">بحث عن مستخدمين</label>
+                        <input type="text" id="adminUsersSearch" placeholder="ابحث بالاسم أو البريد الإلكتروني">
+                    </div>
+                </div>
+                <!-- إعدادات بيانات التواصل مع الدعم الفني (للأدمن فقط) -->
+                <form id="adminSupportSettingsForm" class="add-app-form" style="margin-bottom: 16px;">
                     <div class="form-group">
-                        <label for="oldDeletePassword">الرقم السري الحالي</label>
-                        <input type="password" id="oldDeletePassword" placeholder="الرقم السري المستخدم للحذف" required>
+                        <label for="adminSupportEmail">بريد الدعم الفني</label>
+                        <input type="email" id="adminSupportEmail" placeholder="support@example.com">
                     </div>
                     <div class="form-group">
-                        <label for="newDeletePassword">الرقم السري الجديد</label>
-                        <input type="password" id="newDeletePassword" placeholder="اختر رقمًا سريًا جديدًا" required>
+                        <label for="adminSupportNote">رسالة / طريقة تواصل أخرى</label>
+                        <input type="text" id="adminSupportNote" placeholder="مثال: رقم واتساب أو تعليمات خاصة (اختياري)">
                     </div>
-                    <button type="submit" class="btn btn-secondary">تحديث الرقم السري للحذف</button>
-                    <button type="button" id="resetDeletePasswordBtn" class="btn" style="margin-right: 8px;">نسيت الرقم السري؟ إعادة تعيين</button>
+                    <div class="form-group">
+                        <label for="adminSupportMethodInput">إضافة وسيلة تواصل أخرى</label>
+                        <div>
+                            <input type="text" id="adminSupportMethodInput" placeholder="مثال: قناة تيليجرام، حساب تويتر، الخ" style="margin-bottom:8px;">
+                            <button type="button" id="addSupportMethodBtn" class="btn btn-secondary">إضافة الوسيلة</button>
+                        </div>
+                        <small class="field-hint">يمكنك إضافة أكثر من وسيلة تواصل مثل تيليجرام أو تويتر أو غيرها.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>وسائل التواصل المضافة</label>
+                        <ul id="adminSupportMethodsList" class="support-methods-list"></ul>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">حفظ إعدادات الدعم الفني</button>
                 </form>
 
+                <!-- نموذج إضافة مستخدم جديد (للأدمن فقط) -->
+                <form id="adminAddUserForm" class="add-app-form" style="margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label for="adminNewUsername">اسم المستخدم</label>
+                        <input type="text" id="adminNewUsername" placeholder="اسم المستخدم الجديد" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminNewEmail">البريد الإلكتروني</label>
+                        <input type="email" id="adminNewEmail" placeholder="user@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminNewPassword">كلمة المرور</label>
+                        <input type="password" id="adminNewPassword" placeholder="كلمة المرور للمستخدم" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">إضافة مستخدم جديد</button>
+                </form>
+                <div class="admin-users-table">
+                    <div class="admin-users-header">
+                        <span>اسم المستخدم</span>
+                        <span>البريد الإلكتروني</span>
+                        <span>النوع</span>
+                        <span>الإجراءات</span>
+                    </div>
+                    <div id="adminUsersBody" class="admin-users-body">
+                        <!-- يتم ملؤه ديناميكياً من الجافاسكربت -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم الدعم الفني -->
+            <div id="supportSection" class="apps-section">
+                <h2 class="section-title">الدعم الفني</h2>
+                <p class="app-description">مرحباً بك في قسم الدعم الفني. هنا يمكنك التواصل معنا في حال واجهت أي مشكلة في استخدام لوحة التحكم أو التطبيقات.</p>
+                <div class="add-app-form" style="max-width: 600px; margin-top: 12px;">
+                    <div class="form-group">
+                        <label>بريد التواصل مع الدعم</label>
+                        <p id="supportEmailDisplay" class="field-hint">لم يتم إعداد بريد الدعم بعد. يرجى التواصل مع الأدمن لإعداده.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>طريقة تواصل إضافية</label>
+                        <p id="supportNoteDisplay" class="field-hint">لا توجد بيانات تواصل إضافية حتى الآن.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>وسائل تواصل أخرى</label>
+                        <ul id="supportMethodsDisplay" class="support-methods-list">
+                            <li class="field-hint">لا توجد وسائل تواصل أخرى حتى الآن.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم التطبيقات مع تبويبات -->
+            <div class="apps-section">
                 <div class="tabs-header">
                     <button class="tab-button active" data-tab="webAppsTab"><i class="fas fa-globe"></i> تطبيقات الويب</button>
                     <button class="tab-button" data-tab="apkAppsTab"><i class="fas fa-android"></i> تطبيقات أندرويد (APK)</button>
                     <button class="tab-button" data-tab="socialAppsTab"><i class="fas fa-hashtag"></i> تطبيقات السوشيال ميديا</button>
+                    <button class="tab-button" data-tab="favoriteAppsTab"><i class="fas fa-star"></i> تطبيقات المفضلة</button>
                 </div>
 
                 <div class="tabs-content">
@@ -212,6 +384,8 @@
                                     <div class="app-actions">
                                         <a href="https://merry-otter-c0d0b2.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
                                         <a href="https://merry-otter-c0d0b2.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                                        <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                                         <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                                         <button type="button" class="btn delete-btn">حذف التطبيق</button>
                                     </div>
@@ -229,6 +403,8 @@
                                     <div class="app-actions">
                                         <a href="https://stately-cassata-b0d214.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
                                         <a href="https://stately-cassata-b0d214.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                                        <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                                         <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                                         <button type="button" class="btn delete-btn">حذف التطبيق</button>
                                     </div>
@@ -246,6 +422,8 @@
                                     <div class="app-actions">
                                         <a href="https://glowing-dragon-8d2a14.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
                                         <a href="https://glowing-dragon-8d2a14.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة المشروع</a>
+                                        <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                                        <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                                         <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                                         <button type="button" class="btn delete-btn">حذف التطبيق</button>
                                     </div>
@@ -263,6 +441,8 @@
                                     <div class="app-actions">
                                         <a href="https://serene-froyo-216908.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
                                         <a href="https://serene-froyo-216908.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                                        <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                                         <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                                         <button type="button" class="btn delete-btn">حذف التطبيق</button>
                                     </div>
@@ -280,6 +460,8 @@
                                     <div class="app-actions">
                                         <a href="https://melodious-griffin-127d9d.netlify.app/" class="btn btn-primary" target="_blank">زيارة الموقع</a>
                                         <a href="https://melodious-griffin-127d9d.netlify.app/" class="btn btn-secondary" target="_blank">عرض صفحة التطبيق</a>
+                                        <button type="button" class="btn" data-favorite-btn>إضافة إلى المفضلة</button>
+                                        <button type="button" class="btn" data-remove-favorite-btn style="display:none;">إزالة من المفضلة</button>
                                         <button type="button" class="btn edit-btn">تعديل التطبيق</button>
                                         <button type="button" class="btn delete-btn">حذف التطبيق</button>
                                     </div>
@@ -355,6 +537,15 @@
 
                         <div class="apps-grid" id="socialAppsGrid">
                             <!-- يتم إضافة بطاقات تطبيقات السوشيال ميديا هنا ديناميكياً من النموذج -->
+                        </div>
+                    </section>
+
+                    <!-- تبويب تطبيقات المفضلة -->
+                    <section id="favoriteAppsTab" class="tab-pane">
+                        <h2 class="section-title">تطبيقات المفضلة <span id="favoriteAppsCount" class="section-app-count"></span></h2>
+
+                        <div class="apps-grid" id="favoriteAppsGrid">
+                            <!-- يتم عرض بطاقات التطبيقات المضافة إلى المفضلة من جميع الأقسام هنا -->
                         </div>
                     </section>
                 </div>
