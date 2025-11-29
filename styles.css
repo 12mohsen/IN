@@ -844,6 +844,11 @@ body.manage-mode .edit-btn {
 
 /* تحسينات للأجهزة المحمولة */
 @media (max-width: 768px) {
+    /* منع التمرير الأفقي الذي قد يسبب حجب جزء من المحتوى */
+    body {
+        overflow-x: hidden;
+    }
+
     .header-left .search-box {
         display: none;
     }
@@ -864,8 +869,14 @@ body.manage-mode .edit-btn {
     }
 
     /* المحتوى يأخذ العرض الكامل في الجوال */
+    .container {
+        flex-direction: column;
+    }
+
     .main-content {
         margin-right: 0;
+        width: 100%;
+        padding: 16px;
     }
 
     .stats-grid, .apps-grid {

@@ -898,6 +898,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
+            // تأكيد قبل تسجيل الخروج للسماح بالتراجع عن العملية
+            const confirmLogout = confirm('هل أنت متأكد أنك تريد تسجيل الخروج؟');
+            if (!confirmLogout) {
+                return; // تراجع عن الخروج
+            }
+
             // مسح المستخدم الحالي من الذاكرة والتخزين المحلي
             currentUser = null;
             try {
@@ -2019,22 +2025,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const user = users.find(u => u.email === email && u.password === password);
-            if (!user) {
-                // تنبيه تشخيصي مؤقت لمعرفة ما هو المخزن فعلياً وما الذي أدخلته
-                try {
-                    alert('تشخيص تسجيل الدخول:\n\nالمستخدمون المخزّنون:\n' + JSON.stringify(users, null, 2) + '\n\nالبريد المدخل: ' + email + '\nكلمة المرور المدخلة: ' + password);
-                } catch (e) {}
-
+            const userByEmail = users.find(u => u.email === email);
+            if (!userByEmail) {
                 if (loginError) {
-                    loginError.textContent = 'بيانات الدخول غير صحيحة.';
+                    loginError.textContent = 'هذا البريد الإلكتروني غير مسجَّل في النظام. يرجى إنشاء حساب جديد أولاً.';
                     loginError.style.display = 'block';
                 } else {
-                    alert('بيانات الدخول غير صحيحة.');
+                    alert('هذا البريد الإلكتروني غير مسجَّل في النظام. يرجى إنشاء حساب جديد أولاً.');
                 }
                 return;
             }
 
+            if (userByEmail.password !== password) {
+                if (loginError) {
+                    loginError.textContent = 'كلمة السر أو البريد الإلكتروني غير صحيح.';
+                    loginError.style.display = 'block';
+                } else {
+                    alert('كلمة السر أو البريد الإلكتروني غير صحيح.');
+                }
+                return;
+            }
+
+            const user = userByEmail;
             currentUser = { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin === true };
             try {
                 localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
@@ -2049,7 +2061,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof applyAdminVisibility === 'function') {
                 applyAdminVisibility();
             }
-            alert(`مرحباً ${user.username}، تم تسجيل الدخول بنجاح.`);
         });
     }
 
