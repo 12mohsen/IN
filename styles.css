@@ -1054,7 +1054,15 @@ body.manage-mode .edit-btn {
     .header-right-actions {
         width: 100%;
         justify-content: flex-start;
-        gap: 8px;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .header-right-actions .profile-btn,
+    .header-right-actions #logoutBtn {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+        white-space: nowrap;
     }
 
     .header-left {
