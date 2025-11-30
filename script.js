@@ -907,7 +907,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // مسح المستخدم الحالي من الذاكرة والتخزين المحلي
             currentUser = null;
             try {
-                localStorage.removeItem('dashboard_current_user');
+                localStorage.removeItem(CURRENT_USER_KEY);
+                localStorage.removeItem(AUTH_TOKEN_KEY);
             } catch (e) {}
 
             // إعادة إظهار طبقة تسجيل الدخول إذا كان هناك مستخدمون مسجلون
@@ -1261,6 +1262,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const FAVORITES_KEY = 'dashboard_favorite_apps';
     const USERS_KEY = 'dashboard_users';
     const CURRENT_USER_KEY = 'dashboard_current_user';
+    const AUTH_TOKEN_KEY = 'dashboard_auth_token';
     const DELETED_STATIC_KEY = 'dashboard_deleted_static_cards';
 
     function saveWebApps() {
@@ -1285,6 +1287,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function saveUsers() {
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    // إعدادات API المصادقة الخارجي (Render)
+    const API_BASE_URL = 'https://in-shcy.onrender.com';
+
+    async function apiSignup({ username, email, password }) {
+        const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message = data && data.message ? data.message : 'حدث خطأ أثناء إنشاء الحساب.';
+            throw new Error(message);
+        }
+        return data; // متوقع { user, token }
+    }
+
+    async function apiLogin({ email, password }) {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message = data && data.message ? data.message : 'بيانات الدخول غير صحيحة.';
+            throw new Error(message);
+        }
+        return data; // متوقع { user, token }
     }
 
     // دالة لتحديث عدد التطبيقات في كل قسم
@@ -1908,7 +1943,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const signupConfirmPassword = document.getElementById('signupConfirmPassword');
 
     if (signupForm && signupUsername && signupEmail && signupPassword && signupConfirmPassword) {
-        signupForm.addEventListener('submit', function (e) {
+        signupForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const username = signupUsername.value.trim();
@@ -1926,30 +1961,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const exists = users.some(user => user.email === email);
-            if (exists) {
-                alert('يوجد حساب مسجّل بهذا البريد الإلكتروني بالفعل.');
-                return;
+            try {
+                const { user, token } = await apiSignup({ username, email, password });
+
+                if (token) {
+                    try {
+                        localStorage.setItem(AUTH_TOKEN_KEY, token);
+                    } catch (e) {}
+                }
+
+                if (user) {
+                    currentUser = {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        isAdmin: !!user.isAdmin
+                    };
+                    try {
+                        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+                    } catch (e) {}
+                }
+
+                signupUsername.value = '';
+                signupEmail.value = '';
+                signupPassword.value = '';
+                signupConfirmPassword.value = '';
+
+                alert('تم إنشاء الحساب وتسجيل الدخول بنجاح.');
+
+                if (authOverlay) authOverlay.style.display = 'none';
+                if (typeof applyAdminVisibility === 'function') {
+                    applyAdminVisibility();
+                }
+            } catch (err) {
+                alert(err && err.message ? err.message : 'حدث خطأ أثناء إنشاء الحساب.');
             }
-
-            const userData = {
-                id: Date.now().toString() + Math.random().toString(16).slice(2),
-                username,
-                email,
-                password,
-                // أول مستخدم يتم إنشاؤه يصبح أدمن تلقائياً
-                isAdmin: users.length === 0
-            };
-
-            users.push(userData);
-            saveUsers();
-
-            signupUsername.value = '';
-            signupEmail.value = '';
-            signupPassword.value = '';
-            signupConfirmPassword.value = '';
-
-            alert('تم إنشاء الحساب بنجاح. يمكنك استخدام هذه البيانات في شاشة تسجيل الدخول.');
         });
     }
 
@@ -1995,13 +2041,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyAuthGuard() {
         if (!authOverlay || !loginForm) return;
 
-        // إذا لم يكن هناك أي مستخدمين مسجلين، نظهر طبقة المصادقة مع نموذج إنشاء الحساب
-        if (!users || users.length === 0) {
-            authOverlay.style.display = 'flex';
-            showSignupView();
-            return;
-        }
-
+        // نعتمد فقط على وجود مستخدم حالي (من API) لإخفاء طبقة المصادقة
         if (currentUser && currentUser.email) {
             authOverlay.style.display = 'none';
         } else {
@@ -2011,7 +2051,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (loginForm && loginEmail && loginPassword) {
-        loginForm.addEventListener('submit', function (e) {
+        loginForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const email = loginEmail.value.trim().toLowerCase();
@@ -2025,41 +2065,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const userByEmail = users.find(u => u.email === email);
-            if (!userByEmail) {
-                if (loginError) {
-                    loginError.textContent = 'هذا البريد الإلكتروني غير مسجَّل في النظام. يرجى إنشاء حساب جديد أولاً.';
-                    loginError.style.display = 'block';
-                } else {
-                    alert('هذا البريد الإلكتروني غير مسجَّل في النظام. يرجى إنشاء حساب جديد أولاً.');
-                }
-                return;
-            }
-
-            if (userByEmail.password !== password) {
-                if (loginError) {
-                    loginError.textContent = 'كلمة السر أو البريد الإلكتروني غير صحيح.';
-                    loginError.style.display = 'block';
-                } else {
-                    alert('كلمة السر أو البريد الإلكتروني غير صحيح.');
-                }
-                return;
-            }
-
-            const user = userByEmail;
-            currentUser = { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin === true };
             try {
-                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
-            } catch (e) {}
+                const { user, token } = await apiLogin({ email, password });
 
-            if (loginError) loginError.style.display = 'none';
-            loginPassword.value = '';
+                if (token) {
+                    try {
+                        localStorage.setItem(AUTH_TOKEN_KEY, token);
+                    } catch (e) {}
+                }
 
-            if (authOverlay) authOverlay.style.display = 'none';
+                if (user) {
+                    currentUser = {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        isAdmin: !!user.isAdmin
+                    };
+                    try {
+                        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+                    } catch (e) {}
+                }
 
-            // بعد تسجيل الدخول الناجح، نحدّث ظهور قسم الإدارة حسب صلاحيات الحساب
-            if (typeof applyAdminVisibility === 'function') {
-                applyAdminVisibility();
+                if (loginError) loginError.style.display = 'none';
+                loginPassword.value = '';
+
+                if (authOverlay) authOverlay.style.display = 'none';
+
+                if (typeof applyAdminVisibility === 'function') {
+                    applyAdminVisibility();
+                }
+            } catch (err) {
+                const msg = err && err.message ? err.message : 'كلمة السر أو البريد الإلكتروني غير صحيح.';
+                if (loginError) {
+                    loginError.textContent = msg;
+                    loginError.style.display = 'block';
+                } else {
+                    alert(msg);
+                }
             }
         });
     }
