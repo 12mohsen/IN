@@ -256,12 +256,14 @@ h1 {
 }
 
 #currentUserDisplay {
-    font-size: 0.85rem;
-    color: #e5e7eb;
-    max-width: 240px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-inline-start: 8px;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .notification-btn i,
@@ -1041,6 +1043,7 @@ body.manage-mode .edit-btn {
         flex-direction: row;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
     }
 
     .menu-toggle-btn {
@@ -1063,6 +1066,7 @@ body.manage-mode .edit-btn {
     /* المحتوى يأخذ العرض الكامل في الجوال */
     .container {
         flex-direction: column;
+        margin-top: 110px;
     }
 
     .main-content {
@@ -1081,13 +1085,13 @@ body.manage-mode .edit-btn {
         font-size: 1rem;
         font-weight: 700;
         color: #fbbf24;
-        background-color: #020617;
-        border-top: 1px solid #111827;
         padding: 4px 12px 6px;
         text-align: center;
         max-width: 100%;
         white-space: normal;
         overflow-wrap: anywhere;
         line-height: 1.4;
+        order: 10;
+        margin-inline-start: 0;
     }
 }
