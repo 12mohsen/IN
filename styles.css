@@ -257,8 +257,8 @@ h1 {
 
 #currentUserDisplay {
     display: block;
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 500;
     color: #fbbf24;
     margin-inline-start: 8px;
     max-width: 100%;
@@ -1066,7 +1066,7 @@ body.manage-mode .edit-btn {
     /* المحتوى يأخذ العرض الكامل في الجوال */
     .container {
         flex-direction: column;
-        margin-top: 96px;
+        margin-top: 132px;
     }
 
     .main-content {
@@ -1082,8 +1082,8 @@ body.manage-mode .edit-btn {
     #currentUserDisplay {
         display: block;
         width: 100%;
-        font-size: 0.95rem;
-        font-weight: 600;
+        font-size: 0.85rem;
+        font-weight: 500;
         color: #fbbf24;
         padding: 4px 16px 6px;
         text-align: center;
