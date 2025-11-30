@@ -1024,10 +1024,11 @@ body.manage-mode .edit-btn {
     /* منع التمرير الأفقي الذي قد يسبب حجب جزء من المحتوى */
     body {
         overflow-x: hidden;
-        padding-top: 140px; /* مساحة تحت الهيدر حتى يظهر الترحيب بالكامل */
+        padding-top: 0;
     }
 
     .header {
+        position: static; /* إلغاء التثبيت حتى لا يحجب المحتوى */
         height: auto;
         min-height: 60px;
         flex-direction: column;
