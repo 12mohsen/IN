@@ -1083,7 +1083,8 @@ body.manage-mode .edit-btn {
     .sidebar {
         right: auto;
         left: 0;
-        top: 60px;
+        top: 120px; /* تبدأ أسفل الهيدر قليلاً حتى لا تغطي سطر الترحيب */
+        height: calc(100vh - 120px);
         transform: translateX(-100%); /* مخفية بالكامل خارج الشاشة من اليسار */
         transition: transform 0.3s ease;
         z-index: 90;
@@ -1103,10 +1104,16 @@ body.manage-mode .edit-btn {
         margin-right: 0;
         width: 100%;
         padding: 16px;
+        margin-top: 0;
+    }
+
+    /* عندما تكون القائمة الجانبية مفتوحة، ادفع المحتوى للأسفل حتى لا يُحجب البانر */
+    body.sidebar-open .main-content {
+        margin-top: 80px;
     }
 
     .welcome-banner {
-        margin-top: 16px; /* يضمن نزول قسم الترحيب تحت الهيدر */
+        margin-top: 8px;
     }
 
     .stats-grid, .apps-grid {
