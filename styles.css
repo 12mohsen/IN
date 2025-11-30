@@ -69,6 +69,11 @@ body {
     color: #e5e7eb;
 }
 
+input[type="email"],
+input[type="password"] {
+    color: #e5e7eb;
+}
+
 .auth-submit {
     width: 100%;
     margin-top: 6px;
@@ -693,14 +698,79 @@ body.manage-mode .delete-btn {
     margin-top: 24px;
 }
 
+/* تنسيق جذاب لقسم الإدارة (الأدمن) */
+#adminSection {
+    margin-top: 32px;
+}
+
+#adminSection .section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+#adminSection #adminUsersCount {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+#adminSection .add-app-form {
+    background: radial-gradient(circle at top, rgba(15,23,42,0.96), #020617 60%);
+    border-radius: 14px;
+    border-color: #111827;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.65);
+}
+
+#adminSection .add-app-form .form-group {
+    flex: 1 1 260px;
+}
+
+#adminSection .add-app-form label {
+    font-weight: 600;
+}
+
+#adminSection #adminAddUserForm .form-group label {
+    color: #ffffff;
+}
+
+#adminSection .add-app-form input[type="text"],
+#adminSection .add-app-form input[type="email"],
+#adminSection .add-app-form input[type="password"] {
+    background-color: #020617;
+    border-color: #1f2937;
+}
+
+#adminSection .add-app-form button.btn-primary,
+#adminSection .add-app-form button.btn-secondary {
+    margin-top: 4px;
+}
+
+/* شريط البحث عن المستخدمين ضمن قسم الإدارة */
+#adminUsersSearch {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    background-color: #020617;
+    color: #e5e7eb;
+    font-size: 0.85rem;
+}
+
+#adminUsersSearch::placeholder {
+    color: #6b7280;
+}
+
 /* قسم إدارة المستخدمين (الأدمن) */
 .admin-users-table {
-    background-color: #020617;
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), #020617 60%);
     border: 1px solid #111827;
-    border-radius: 10px;
-    padding: 12px;
-    margin-top: 8px;
+    border-radius: 14px;
+    padding: 16px 14px;
+    margin-top: 12px;
     font-size: 0.875rem;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
 }
 
 .admin-users-header,
@@ -714,12 +784,28 @@ body.manage-mode .delete-btn {
 
 .admin-users-header {
     border-bottom: 1px solid #1f2937;
-    font-weight: 600;
-    color: #9ca3af;
+    font-weight: 700;
+    color: #e5e7eb;
+    background: linear-gradient(90deg, rgba(31, 41, 55, 0.95), rgba(15, 23, 42, 0.95));
+    padding: 10px 12px;
+    border-radius: 10px 10px 0 0;
 }
 
 .admin-user-row {
     border-bottom: 1px solid #111827;
+    padding: 8px 4px;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.user-permissions-indicator {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: #a3e635;
+}
+
+.admin-user-row:hover {
+    background-color: rgba(15, 23, 42, 0.9);
+    transform: translateY(-1px);
 }
 
 /* جعل صفوف المستخدمين قابلة للتمرير عند كثرة المستخدمين */
@@ -732,6 +818,14 @@ body.manage-mode .delete-btn {
     display: flex;
     gap: 6px;
     justify-content: flex-end;
+}
+
+.admin-user-actions .btn-secondary {
+    padding-inline: 8px;
+}
+
+.admin-user-actions .btn.delete-btn {
+    padding-inline: 8px;
 }
 
 .tabs-header {
@@ -840,6 +934,71 @@ body.manage-mode .edit-btn {
     display: flex;
     gap: 8px;
     margin-top: 4px;
+}
+
+/* تنسيق خاص لقسم الدعم الفني ليظهر بشكل جذاب */
+#supportSection {
+    margin-top: 40px;
+}
+
+#supportSection .section-title {
+    text-align: center;
+}
+
+#supportSection .app-description {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 16px auto;
+}
+
+#supportSection .add-app-form {
+    max-width: 720px;
+    margin: 0 auto 24px auto;
+    padding: 20px;
+    border-radius: 16px;
+    background: radial-gradient(circle at top, #0ea5e9 0%, #020617 55%, #020617 100%);
+    border-color: #0ea5e9;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
+    gap: 12px 16px;
+}
+
+#supportSection .add-app-form .form-group {
+    flex: 1 1 260px;
+}
+
+#supportSection .add-app-form label {
+    color: #e5e7eb;
+    font-weight: 600;
+}
+
+#supportSection .field-hint {
+    color: #cbd5f5;
+}
+
+.support-methods-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.support-methods-list li {
+    background-color: rgba(15, 23, 42, 0.85);
+    border: 1px solid #1f2937;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+}
+
+.support-methods-list li a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+
+.support-methods-list li a:hover {
+    text-decoration: underline;
 }
 
 /* تحسينات للأجهزة المحمولة */

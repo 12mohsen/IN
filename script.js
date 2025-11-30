@@ -321,6 +321,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const adminNewUsernameInput = document.getElementById('adminNewUsername');
     const adminNewEmailInput = document.getElementById('adminNewEmail');
     const adminNewPasswordInput = document.getElementById('adminNewPassword');
+    const currentUserDisplay = document.getElementById('currentUserDisplay');
+
+    function clearAdminAddUserForm() {
+        if (adminNewUsernameInput) adminNewUsernameInput.value = '';
+        if (adminNewEmailInput) adminNewEmailInput.value = '';
+        if (adminNewPasswordInput) adminNewPasswordInput.value = '';
+    }
+
+    function updateCurrentUserDisplay() {
+        if (!currentUserDisplay) return;
+        if (currentUser && currentUser.email) {
+            const label = currentUser.username ? `${currentUser.username} (${currentUser.email})` : currentUser.email;
+            currentUserDisplay.textContent = `المستخدم الحالي: ${label}`;
+        } else {
+            currentUserDisplay.textContent = '';
+        }
+    }
 
     // إعدادات الدعم الفني
     const SUPPORT_SETTINGS_KEY = 'dashboard_support_settings';
@@ -457,8 +474,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (addSupportMethodBtn && adminSupportMethodInput) {
         addSupportMethodBtn.addEventListener('click', function () {
-            if (!isCurrentUserAdmin()) {
-                alert('فقط الأدمن يمكنه تعديل إعدادات الدعم الفني.');
+            if (!canCurrentUserManageSupport()) {
+                alert('ليست لديك صلاحية تعديل إعدادات الدعم الفني. يرجى التواصل مع الأدمن.');
                 return;
             }
 
@@ -480,8 +497,8 @@ document.addEventListener('DOMContentLoaded', function() {
         adminSupportSettingsForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            if (!isCurrentUserAdmin()) {
-                alert('فقط الأدمن يمكنه تعديل إعدادات الدعم الفني.');
+            if (!canCurrentUserManageSupport()) {
+                alert('ليست لديك صلاحية تعديل إعدادات الدعم الفني. يرجى التواصل مع الأدمن.');
                 return;
             }
 
@@ -501,6 +518,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function isCurrentUserAdmin() {
         return !!(currentUser && currentUser.isAdmin === true);
+    }
+
+    function getUserPermissions(user) {
+        if (!user || typeof user !== 'object') return {};
+        return user.permissions && typeof user.permissions === 'object'
+            ? user.permissions
+            : {};
+    }
+
+    function canCurrentUserChangeUsersPasswords() {
+        if (!currentUser) return false;
+        if (currentUser.isAdmin) return true;
+        const perms = getUserPermissions(currentUser);
+        return !!perms.canChangeUsersPasswords;
+    }
+
+    function canCurrentUserAddUsers() {
+        if (!currentUser) return false;
+        if (currentUser.isAdmin) return true;
+        const perms = getUserPermissions(currentUser);
+        return !!perms.canAddUsers;
+    }
+
+    function canCurrentUserManageSupport() {
+        if (!currentUser) return false;
+        if (currentUser.isAdmin) return true;
+        const perms = getUserPermissions(currentUser);
+        return !!perms.canManageSupport;
+    }
+
+    function canCurrentUserDeleteUsers() {
+        if (!currentUser) return false;
+        if (currentUser.isAdmin) return true;
+        const perms = getUserPermissions(currentUser);
+        return !!perms.canDeleteUsers;
+    }
+
+    function canCurrentUserAccessAdminSection() {
+        if (!currentUser) return false;
+        if (currentUser.isAdmin) return true;
+        const perms = getUserPermissions(currentUser);
+        return !!(
+            perms.canChangeUsersPasswords ||
+            perms.canAddUsers ||
+            perms.canManageSupport ||
+            perms.canDeleteUsers
+        );
     }
 
     function renderAdminUsers() {
@@ -546,8 +610,61 @@ document.addEventListener('DOMContentLoaded', function() {
             const roleSpan = document.createElement('span');
             roleSpan.textContent = user.isAdmin ? 'أدمن' : 'مستخدم عادي';
 
+            const perms = getUserPermissions(user);
+            const hasAnyPerm = !!(perms.canChangeUsersPasswords || perms.canAddUsers || perms.canManageSupport || perms.canDeleteUsers);
+            if (hasAnyPerm && !user.isAdmin) {
+                const br = document.createElement('br');
+                const permsInfo = document.createElement('span');
+                permsInfo.className = 'user-permissions-indicator';
+
+                const labels = [];
+                if (perms.canChangeUsersPasswords) labels.push('✓ كلمات السر');
+                if (perms.canAddUsers) labels.push('✓ إضافة مستخدمين');
+                if (perms.canManageSupport) labels.push('✓ دعم فني');
+                if (perms.canDeleteUsers) labels.push('✓ حذف مستخدمين');
+
+                permsInfo.textContent = 'صلاحيات: ' + labels.join('، ');
+                roleSpan.appendChild(br);
+                roleSpan.appendChild(permsInfo);
+            }
+
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'admin-user-actions';
+
+            const permissionsBtn = document.createElement('button');
+            permissionsBtn.type = 'button';
+            permissionsBtn.className = 'btn btn-secondary';
+            permissionsBtn.textContent = 'تعديل الصلاحيات';
+
+            permissionsBtn.addEventListener('click', function () {
+                if (!isCurrentUserAdmin()) {
+                    alert('فقط الأدمن الرئيسي يمكنه تعديل صلاحيات المستخدمين.');
+                    return;
+                }
+
+                const perms = getUserPermissions(user);
+
+                permissionsEditingUserId = user.id;
+                if (permissionsUserLabel) {
+                    permissionsUserLabel.textContent = `المستخدم: ${user.username || user.email}`;
+                }
+                if (permChangePwdsCheckbox) {
+                    permChangePwdsCheckbox.checked = !!perms.canChangeUsersPasswords;
+                }
+                if (permAddUsersCheckbox) {
+                    permAddUsersCheckbox.checked = !!perms.canAddUsers;
+                }
+                if (permManageSupportCheckbox) {
+                    permManageSupportCheckbox.checked = !!perms.canManageSupport;
+                }
+                if (permDeleteUsersCheckbox) {
+                    permDeleteUsersCheckbox.checked = !!perms.canDeleteUsers;
+                }
+
+                if (permissionsModal) {
+                    permissionsModal.style.display = 'block';
+                }
+            });
 
             const changePwdBtn = document.createElement('button');
             changePwdBtn.type = 'button';
@@ -555,6 +672,10 @@ document.addEventListener('DOMContentLoaded', function() {
             changePwdBtn.textContent = 'تغيير كلمة المرور';
 
             changePwdBtn.addEventListener('click', function () {
+                if (!canCurrentUserChangeUsersPasswords()) {
+                    alert('ليست لديك صلاحية تغيير كلمات سر المستخدمين. يرجى التواصل مع الأدمن.');
+                    return;
+                }
                 const newPwd = prompt(`اكتب كلمة مرور جديدة للمستخدم:\n${user.username || user.email}`);
                 if (!newPwd) return;
                 const confirmPwd = prompt('أعد إدخال كلمة المرور الجديدة للتأكيد:');
@@ -583,6 +704,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteBtn.title = 'لا يمكن حذف حساب الأدمن من قسم الإدارة.';
             } else {
                 deleteBtn.addEventListener('click', function () {
+                    if (!canCurrentUserDeleteUsers()) {
+                        alert('ليست لديك صلاحية حذف المستخدمين. يرجى التواصل مع الأدمن.');
+                        return;
+                    }
                     const confirmDelete = confirm(`سيتم حذف هذا المستخدم نهائياً من النظام:\n${user.username || user.email}\n\nهل أنت متأكد من المتابعة؟`);
                     if (!confirmDelete) return;
 
@@ -597,6 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
+            actionsDiv.appendChild(permissionsBtn);
             actionsDiv.appendChild(changePwdBtn);
             actionsDiv.appendChild(deleteBtn);
 
@@ -621,8 +747,8 @@ document.addEventListener('DOMContentLoaded', function() {
         adminAddUserForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            if (!isCurrentUserAdmin()) {
-                alert('فقط الأدمن يمكنه إضافة مستخدمين جدد.');
+            if (!canCurrentUserAddUsers()) {
+                alert('ليست لديك صلاحية إضافة مستخدمين جدد. يرجى التواصل مع الأدمن.');
                 return;
             }
 
@@ -655,9 +781,7 @@ document.addEventListener('DOMContentLoaded', function() {
             users.push(newUser);
             saveUsers();
 
-            adminNewUsernameInput.value = '';
-            adminNewEmailInput.value = '';
-            adminNewPasswordInput.value = '';
+            clearAdminAddUserForm();
 
             renderAdminUsers();
             alert('تم إضافة المستخدم الجديد بنجاح. يمكنه الآن تسجيل الدخول من شاشة الدخول.');
@@ -668,7 +792,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyAdminVisibility() {
         if (!adminNav || !adminSection) return;
 
-        if (isCurrentUserAdmin()) {
+        if (canCurrentUserAccessAdminSection()) {
             adminNav.style.display = '';
         } else {
             adminNav.style.display = 'none';
@@ -679,11 +803,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (adminNav && adminSection) {
         adminNav.addEventListener('click', function (e) {
             e.preventDefault();
-            if (!isCurrentUserAdmin()) {
-                alert('هذا القسم متاح لحساب الأدمن فقط.');
+            if (!canCurrentUserAccessAdminSection()) {
+                alert('ليس لديك صلاحيات كافية للدخول إلى قسم الإدارة. يرجى التواصل مع الأدمن.');
                 return;
             }
             adminSection.style.display = 'block';
+            clearAdminAddUserForm();
             renderAdminUsers();
             adminSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
@@ -729,10 +854,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const profileForm = document.getElementById('profileForm');
     const profileUsernameInput = document.getElementById('profileUsernameInput');
     const profileEmailInput = document.getElementById('profileEmailInput');
+    const profilePermissionsInfo = document.getElementById('profilePermissionsInfo');
     const profileCurrentPasswordInput = document.getElementById('profileCurrentPassword');
     const profileNewPasswordInput = document.getElementById('profileNewPassword');
     const profileConfirmNewPasswordInput = document.getElementById('profileConfirmNewPassword');
     const profileDeleteBtn = document.getElementById('profileDeleteBtn');
+
+    // عناصر نافذة صلاحيات المستخدم
+    const permissionsModal = document.getElementById('permissionsModal');
+    const permissionsForm = document.getElementById('permissionsForm');
+    const permissionsUserLabel = document.getElementById('permissionsUserLabel');
+    const permChangePwdsCheckbox = document.getElementById('permChangePwds');
+    const permAddUsersCheckbox = document.getElementById('permAddUsers');
+    const permManageSupportCheckbox = document.getElementById('permManageSupport');
+    const permDeleteUsersCheckbox = document.getElementById('permDeleteUsers');
+    const permissionsCloseBtn = document.getElementById('permissionsCloseBtn');
+    let permissionsEditingUserId = null;
 
     // فتح نافذة إعدادات الملف الشخصي
     if (profileBtn && profileModal) {
@@ -742,15 +879,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // نحاول دائماً استخدام أحدث نسخة من بيانات المستخدم من مصفوفة users
+            let effectiveUser = currentUser;
+            if (Array.isArray(users) && currentUser && currentUser.id) {
+                const fresh = users.find(u => u && u.id === currentUser.id);
+                if (fresh) {
+                    effectiveUser = fresh;
+                    currentUser = fresh;
+                }
+            }
+
             if (profileUsernameInput) {
-                profileUsernameInput.value = currentUser.username || '';
+                profileUsernameInput.value = effectiveUser.username || '';
                 // المستخدم العادي لا يستطيع تعديل الاسم
                 profileUsernameInput.readOnly = !isCurrentUserAdmin();
             }
             if (profileEmailInput) {
-                profileEmailInput.value = currentUser.email || '';
+                profileEmailInput.value = effectiveUser.email || '';
                 // المستخدم العادي لا يستطيع تعديل البريد
                 profileEmailInput.readOnly = !isCurrentUserAdmin();
+            }
+            if (profilePermissionsInfo) {
+                if (effectiveUser.isAdmin) {
+                    profilePermissionsInfo.textContent = 'نوع الحساب: أدمن كامل الصلاحيات.';
+                } else {
+                    const perms = getUserPermissions(effectiveUser);
+                    const labels = [];
+                    if (perms.canChangeUsersPasswords) labels.push('تغيير كلمات سر المستخدمين');
+                    if (perms.canAddUsers) labels.push('إضافة مستخدمين جدد');
+                    if (perms.canManageSupport) labels.push('إدارة / الرد على الدعم الفني');
+                    if (perms.canDeleteUsers) labels.push('حذف مستخدمين');
+
+                    if (labels.length === 0) {
+                        profilePermissionsInfo.textContent = 'نوع الحساب: مستخدم عادي بدون صلاحيات إدارية إضافية.';
+                    } else {
+                        profilePermissionsInfo.textContent = 'الصلاحيات الممنوحة لك: ' + labels.join('، ');
+                    }
+                }
             }
             if (profileCurrentPasswordInput) {
                 profileCurrentPasswordInput.value = '';
@@ -875,6 +1040,72 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // إغلاق نافذة صلاحيات المستخدم
+    if (permissionsCloseBtn && permissionsModal) {
+        permissionsCloseBtn.addEventListener('click', function () {
+            permissionsModal.style.display = 'none';
+            permissionsEditingUserId = null;
+        });
+    }
+
+    // حفظ صلاحيات المستخدم من النافذة المنبثقة
+    if (permissionsForm && permissionsModal) {
+        permissionsForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!isCurrentUserAdmin()) {
+                alert('فقط الأدمن الرئيسي يمكنه تعديل صلاحيات المستخدمين.');
+                return;
+            }
+
+            if (!permissionsEditingUserId) {
+                permissionsModal.style.display = 'none';
+                return;
+            }
+
+            const idx = users.findIndex(u => u.id === permissionsEditingUserId);
+            if (idx === -1) {
+                alert('لم يتم العثور على هذا المستخدم في السجل لتحديث صلاحياته.');
+                permissionsModal.style.display = 'none';
+                permissionsEditingUserId = null;
+                return;
+            }
+
+            const canChangeUsersPasswords = permChangePwdsCheckbox ? !!permChangePwdsCheckbox.checked : false;
+            const canAddUsers = permAddUsersCheckbox ? !!permAddUsersCheckbox.checked : false;
+            const canManageSupport = permManageSupportCheckbox ? !!permManageSupportCheckbox.checked : false;
+            const canDeleteUsers = permDeleteUsersCheckbox ? !!permDeleteUsersCheckbox.checked : false;
+
+            const newPermissions = {
+                canChangeUsersPasswords,
+                canAddUsers,
+                canManageSupport,
+                canDeleteUsers
+            };
+
+            users[idx].permissions = newPermissions;
+
+            // إذا كان هذا هو المستخدم الحالي، نحدّث كائن currentUser والتخزين أيضاً
+            if (currentUser && currentUser.id === users[idx].id) {
+                currentUser.permissions = newPermissions;
+                try {
+                    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+                } catch (e) {}
+
+                // تحديث ظهور قسم الإدارة بناءً على الصلاحيات الجديدة
+                if (typeof applyAdminVisibility === 'function') {
+                    applyAdminVisibility();
+                }
+            }
+
+            saveUsers();
+            permissionsModal.style.display = 'none';
+            permissionsEditingUserId = null;
+            renderAdminUsers();
+            alert('تم تحديث صلاحيات المستخدم بنجاح.');
+        });
+    }
+
     // تم إلغاء خيار حذف الحساب من نافذة إعدادات الملف الشخصي؛
     // الحذف يتم فقط من قسم "إدارة المستخدمين" بواسطة الأدمن.
 
@@ -909,6 +1140,17 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 localStorage.removeItem('dashboard_current_user');
             } catch (e) {}
+
+            // إخفاء قسم الإدارة وتفريغ نموذج إضافة المستخدم عند الخروج
+            if (adminSection) {
+                adminSection.style.display = 'none';
+            }
+            if (typeof clearAdminAddUserForm === 'function') {
+                clearAdminAddUserForm();
+            }
+            if (typeof updateCurrentUserDisplay === 'function') {
+                updateCurrentUserDisplay();
+            }
 
             // إعادة إظهار طبقة تسجيل الدخول إذا كان هناك مستخدمون مسجلون
             if (typeof applyAuthGuard === 'function') {
@@ -1715,9 +1957,12 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUser = null;
     }
 
-    // بعد تحميل المستخدم الحالي من التخزين، نطبّق ظهور قسم الإدارة
+    // بعد تحميل المستخدم الحالي من التخزين، نطبّق ظهور قسم الإدارة ونحدّث عرض المستخدم الحالي في الهيدر
     if (typeof applyAdminVisibility === 'function') {
         applyAdminVisibility();
+    }
+    if (typeof updateCurrentUserDisplay === 'function') {
+        updateCurrentUserDisplay();
     }
 
     // تطبيق تأثير التحويم ومنطق الحذف/التعديل/المفضلة على البطاقات الثابتة الموجودة في HTML فقط
@@ -2047,7 +2292,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const user = userByEmail;
-            currentUser = { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin === true };
+            currentUser = {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                isAdmin: user.isAdmin === true,
+                permissions: user.permissions && typeof user.permissions === 'object' ? user.permissions : {}
+            };
             try {
                 localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
             } catch (e) {}
@@ -2057,15 +2308,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (authOverlay) authOverlay.style.display = 'none';
 
-            // بعد تسجيل الدخول الناجح، نحدّث ظهور قسم الإدارة حسب صلاحيات الحساب
+            // بعد تسجيل الدخول الناجح، نحدّث ظهور قسم الإدارة حسب صلاحيات الحساب، ونضمن تفريغ نموذج إضافة المستخدم وتحديث اسم المستخدم في الهيدر
             if (typeof applyAdminVisibility === 'function') {
                 applyAdminVisibility();
+            }
+            if (typeof clearAdminAddUserForm === 'function') {
+                clearAdminAddUserForm();
+            }
+            if (typeof updateCurrentUserDisplay === 'function') {
+                updateCurrentUserDisplay();
             }
         });
     }
 
     // تطبيق حماية الدخول بعد تحميل المستخدمين
     applyAuthGuard();
+
+    // ضمان تفريغ نموذج إضافة مستخدم جديد عند تحميل الصفحة أيضاً
+    if (typeof clearAdminAddUserForm === 'function') {
+        clearAdminAddUserForm();
+    }
 
     // تحديث الإحصائيات بشكل دوري حتى لو كانت القيم نصوصاً غير رقمية في البداية
     setInterval(function() {

@@ -62,6 +62,51 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل صلاحيات المستخدم (للأدمن) -->
+    <div id="permissionsModal" class="profile-overlay" style="display: none;">
+        <div class="profile-box">
+            <h2 class="profile-title">تعديل صلاحيات المستخدم</h2>
+            <p class="profile-subtitle">يمكنك تحديد الصلاحيات المسموح بها لهذا المستخدم.</p>
+            <form id="permissionsForm" class="profile-form">
+                <div class="profile-row">
+                    <span id="permissionsUserLabel" class="profile-label" style="font-weight:700;"></span>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="permChangePwds">
+                        <input id="permChangePwds" type="checkbox" style="margin-left:8px;">
+                        يمكنه تغيير كلمات سر المستخدمين
+                    </label>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="permAddUsers">
+                        <input id="permAddUsers" type="checkbox" style="margin-left:8px;">
+                        يمكنه إضافة مستخدمين جدد
+                    </label>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="permManageSupport">
+                        <input id="permManageSupport" type="checkbox" style="margin-left:8px;">
+                        يمكنه إدارة / الرد على الدعم الفني
+                    </label>
+                </div>
+                <div class="profile-row">
+                    <label class="profile-label" for="permDeleteUsers">
+                        <input id="permDeleteUsers" type="checkbox" style="margin-left:8px;">
+                        يمكنه حذف مستخدمين من قسم الإدارة
+                    </label>
+                </div>
+                <div class="profile-actions">
+                    <button type="button" id="permissionsCloseBtn" class="btn btn-secondary">
+                        إغلاق
+                    </button>
+                    <button type="submit" id="permissionsSaveBtn" class="btn btn-primary">
+                        حفظ الصلاحيات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- نافذة إعدادات الملف الشخصي -->
     <div id="profileModal" class="profile-overlay" style="display: none;">
         <div class="profile-box">
@@ -75,6 +120,9 @@
                 <div class="profile-row">
                     <label class="profile-label" for="profileEmailInput">البريد الإلكتروني</label>
                     <input id="profileEmailInput" type="email" class="profile-input" required>
+                </div>
+                <div class="profile-row">
+                    <span id="profilePermissionsInfo" class="profile-label" style="font-size:0.8rem;color:#9ca3af;"></span>
                 </div>
                 <div class="profile-row">
                     <label class="profile-label" for="profileCurrentPassword">كلمة المرور الحالية</label>
@@ -125,6 +173,7 @@
                 <i class="fas fa-user"></i>
                 <span>الملف الشخصي</span>
             </button>
+            <span id="currentUserDisplay" style="font-size:0.85rem;color:#9ca3af;"></span>
             <button id="logoutBtn" class="btn" type="button" style="margin-right: 8px;">
                 تسجيل خروج
             </button>
@@ -281,18 +330,18 @@
                 </form>
 
                 <!-- نموذج إضافة مستخدم جديد (للأدمن فقط) -->
-                <form id="adminAddUserForm" class="add-app-form" style="margin-bottom: 16px;">
+                <form id="adminAddUserForm" class="add-app-form" style="margin-bottom: 16px;" autocomplete="off">
                     <div class="form-group">
                         <label for="adminNewUsername">اسم المستخدم</label>
-                        <input type="text" id="adminNewUsername" placeholder="اسم المستخدم الجديد" required>
+                        <input type="text" id="adminNewUsername" placeholder="اسم المستخدم الجديد" required autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="adminNewEmail">البريد الإلكتروني</label>
-                        <input type="email" id="adminNewEmail" placeholder="user@example.com" required>
+                        <input type="email" id="adminNewEmail" placeholder="user@example.com" required autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="adminNewPassword">كلمة المرور</label>
-                        <input type="password" id="adminNewPassword" placeholder="كلمة المرور للمستخدم" required>
+                        <input type="password" id="adminNewPassword" placeholder="كلمة المرور للمستخدم" required autocomplete="new-password">
                     </div>
                     <button type="submit" class="btn btn-primary">إضافة مستخدم جديد</button>
                 </form>
