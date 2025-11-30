@@ -1084,7 +1084,7 @@ body.manage-mode .edit-btn {
     /* المحتوى يأخذ العرض الكامل في الجوال */
     .container {
         flex-direction: column;
-        margin-top: 132px;
+        margin-top: 150px;
     }
 
     .main-content {
