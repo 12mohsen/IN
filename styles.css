@@ -1021,6 +1021,12 @@ body.manage-mode .edit-btn {
         display: none;
     }
 
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
     .menu-toggle-btn {
         display: inline-flex;
     }
@@ -1055,8 +1061,13 @@ body.manage-mode .edit-btn {
 
     #currentUserDisplay {
         display: block;
-        font-size: 0.9rem;
-        margin-inline-start: 4px;
-        max-width: 55vw;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fbbf24;
+        margin-inline-start: 0;
+        max-width: 80vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
