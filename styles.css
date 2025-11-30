@@ -305,6 +305,7 @@ h1 {
     border-left: 1px solid #111827;
     height: calc(100vh - 60px);
     position: fixed;
+    top: 60px;
     padding: 24px 0;
 }
 
@@ -1080,6 +1081,7 @@ body.manage-mode .edit-btn {
     .sidebar {
         right: auto;
         left: 0;
+        top: 60px;
         transform: translateX(-100%); /* مخفية بالكامل خارج الشاشة من اليسار */
         transition: transform 0.3s ease;
         z-index: 90;
