@@ -1105,6 +1105,10 @@ body.manage-mode .edit-btn {
         padding: 16px;
     }
 
+    .welcome-banner {
+        margin-top: 16px; /* يضمن نزول قسم الترحيب تحت الهيدر */
+    }
+
     .stats-grid, .apps-grid {
         grid-template-columns: 1fr;
     }
