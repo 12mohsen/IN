@@ -159,9 +159,15 @@
             </button>
             <img src="https://picsum.photos/40" alt="شعار النظام" class="logo">
             <h1>نظام إدارة التطبيقات</h1>
-            <button id="logoutBtn" class="btn" type="button" style="margin-right: 8px;">
-                تسجيل خروج
-            </button>
+            <div class="header-right-actions">
+                <button class="profile-btn">
+                    <i class="fas fa-user"></i>
+                    <span>الملف الشخصي</span>
+                </button>
+                <button id="logoutBtn" class="btn" type="button" style="margin-right: 8px;">
+                    تسجيل خروج
+                </button>
+            </div>
         </div>
         <div class="header-left">
             <div class="search-box">
@@ -171,10 +177,6 @@
             <button class="notification-btn">
                 <i class="fas fa-bell"></i>
                 <span class="badge">٣</span>
-            </button>
-            <button class="profile-btn">
-                <i class="fas fa-user"></i>
-                <span>الملف الشخصي</span>
             </button>
             <span id="currentUserDisplay"></span>
         </div>

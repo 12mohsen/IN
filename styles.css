@@ -203,6 +203,12 @@ input[type="password"] {
     gap: 16px;
 }
 
+.header-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .menu-toggle-btn {
     display: none;
     background: none;
@@ -1037,6 +1043,18 @@ body.manage-mode .edit-btn {
     .header-left {
         width: 100%;
         justify-content: space-between;
+    }
+
+    .header-right {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .header-right-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
     }
 
     .header-left {
