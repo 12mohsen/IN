@@ -1024,6 +1024,7 @@ body.manage-mode .edit-btn {
     /* منع التمرير الأفقي الذي قد يسبب حجب جزء من المحتوى */
     body {
         overflow-x: hidden;
+        padding-top: 140px; /* مساحة تحت الهيدر حتى يظهر الترحيب بالكامل */
     }
 
     .header {
@@ -1094,7 +1095,7 @@ body.manage-mode .edit-btn {
     /* المحتوى يأخذ العرض الكامل في الجوال */
     .container {
         flex-direction: column;
-        margin-top: 170px;
+        margin-top: 0;
     }
 
     .main-content {
